@@ -19,6 +19,7 @@ const RS_DEFAULTS = Object.freeze({
   washer_entity: '', // Legacy configuration supported
   washers: [], dryers: [], dryer_active_state: 'on',
   cooling_climates: [], lock_entity: '',
+  alarm_away_script: '', lock_action_entity: '',
   alarm_time_entity: '', washer_time_entity: '', dryer_time_entity: '',
   heating_time_entity: '', cooling_time_entity: '',
   custom_indicators: [],
@@ -37,6 +38,7 @@ const RS_DOMAINS = Object.freeze({
   washers: ['binary_sensor', 'sensor', 'switch', 'input_boolean'],
   dryers: ['binary_sensor', 'sensor', 'switch', 'input_boolean'],
   cooling_climates: ['climate'], lock_entity: ['lock'],
+  alarm_away_script: ['script'], lock_action_entity: ['lock','script'],
   alarm_time_entity: ['sensor'], washer_time_entity: ['sensor'],
   dryer_time_entity: ['sensor'], heating_time_entity: ['sensor'],
   cooling_time_entity: ['sensor'],
@@ -96,6 +98,8 @@ function rsConfig(raw={}) {
     dryer_active_state:rsText(r.dryer_active_state??'on',40)||'on',
     cooling_climates:rsArray(r.cooling_climates,RS_DOMAINS.cooling_climates),
     lock_entity:rsEntity(r.lock_entity,RS_DOMAINS.lock_entity),
+    alarm_away_script:rsEntity(r.alarm_away_script,RS_DOMAINS.alarm_away_script),
+    lock_action_entity:rsEntity(r.lock_action_entity,RS_DOMAINS.lock_action_entity),
     alarm_time_entity:rsEntity(r.alarm_time_entity,RS_DOMAINS.alarm_time_entity),
     washer_time_entity:rsEntity(r.washer_time_entity,RS_DOMAINS.washer_time_entity),
     dryer_time_entity:rsEntity(r.dryer_time_entity,RS_DOMAINS.dryer_time_entity),
@@ -157,25 +161,24 @@ const RS_OVERLAY_STYLE = `
 .rs-panel.rs-light,.rs-menu.rs-light{--rs-green:#0a7156;--rs-bg:#fafbf9;--rs-text:#18221c;--rs-muted:#56675c;--rs-surface:#f0f2ef;--rs-circle:#fff;--rs-line:#e0e5df}
 .rs-panel{width:min(390px,100%);max-height:min(90vh,720px);max-height:min(90dvh,720px);display:flex;flex-direction:column;overflow:hidden;padding:20px}
 .rs-dialog-top{display:flex;align-items:center;gap:10px;min-height:38px;margin:0 0 12px;background:var(--rs-bg);flex:none}.rs-dialog-top strong{flex:1;min-width:0;font-size:17px;font-weight:600;line-height:1.3;overflow-wrap:anywhere}
-.rs-big-icon{width:39px;height:39px;flex:none;border-radius:50%;background:var(--rs-circle);color:var(--rs-text);display:grid;place-items:center}.rs-big-icon ha-icon{--mdc-icon-size:21px}
-.rs-popup-titles{flex:1;min-width:0}.rs-eyebrow{letter-spacing:1.5px;font-size:10px;color:var(--rs-muted);font-weight:750;margin-bottom:4px}.rs-popup-title{font-weight:650;font-size:19px;line-height:1.2;overflow-wrap:anywhere}.rs-dot{color:var(--rs-green)}
 .rs-x{width:36px;height:36px;flex:none;display:grid;place-items:center;border-radius:50%;background:var(--rs-surface);border:0;color:var(--rs-text);padding:0}.rs-x ha-icon{--mdc-icon-size:18px}
 .rs-dialog-body{padding:0 2px 2px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;min-height:0;-webkit-overflow-scrolling:touch;scrollbar-gutter:stable}
 .rs-row{display:flex;align-items:center;gap:10px;background:var(--rs-surface);border:1px solid var(--rs-line);padding:11px 12px;border-radius:14px;min-width:0;margin:0 0 9px;min-height:66px}
 .rs-row-icon{width:38px;height:38px;display:grid;place-items:center;flex:none;border-radius:50%;color:var(--rs-text);background:var(--rs-circle)}.rs-row-icon ha-icon{--mdc-icon-size:20px}.rs-custom-items{margin:0 0 12px 14px;padding-left:10px;border-left:2px solid var(--rs-line)}.rs-custom-item{display:flex;align-items:center;gap:9px;padding:7px 0;font-size:12px}.rs-custom-item span{flex:1;overflow-wrap:anywhere}.rs-custom-item button{font:inherit;font-size:12px;padding:6px 9px;border:1px solid var(--rs-line);border-radius:9px;background:var(--rs-surface);color:var(--rs-text);cursor:pointer}
 .rs-row-txt{flex:1;min-width:0}.rs-row-title{font-size:13px;font-weight:650}.rs-row-desc{font-size:12px;color:var(--rs-muted);margin-top:3px;overflow-wrap:anywhere}.rs-row button{border:1px solid var(--rs-line);border-radius:999px;color:var(--rs-text);background:var(--rs-circle);padding:8px 10px;font-size:11px;min-height:32px;white-space:nowrap;flex:none}
+.rs-row.rs-row-action{display:block}.rs-row-main{display:flex;align-items:center;gap:10px;min-width:0}.rs-row-shortcut{border-top:1px solid var(--rs-line);margin-top:9px;padding-top:9px;display:flex;align-items:center;justify-content:space-between;gap:10px}.rs-row-shortcut span{font-size:12px;color:var(--rs-muted);min-width:0}.rs-row-shortcut button{min-height:30px;padding:6px 12px;background:var(--rs-green);color:#fff;border:0}.rs-row-shortcut button:focus-visible{outline:2px solid var(--rs-green);outline-offset:2px}
 .rs-help{font-size:12px;color:var(--rs-muted);line-height:1.5;margin:11px 2px}.rs-confirm{border:1px solid #bd8a4e;background:#b17c2a1c;padding:12px;border-radius:14px;margin-bottom:12px}.rs-confirm p{font-size:13px;margin:0 0 10px}.rs-confirm-actions{display:flex;gap:9px}.rs-confirm-actions button{border-radius:999px;min-height:36px;font-size:12px;border:1px solid var(--rs-line);padding:7px 12px;color:var(--rs-text);background:var(--rs-circle)}.rs-confirm-actions button.primary{background:var(--rs-green);border-color:var(--rs-green);color:#fff}
 .rs-menu{position:fixed;max-height:min(460px,calc(100dvh - 20px));overflow-y:auto;overflow-x:hidden;min-width:220px;max-width:calc(100vw - 16px);padding:8px;border-radius:18px;box-shadow:0 18px 60px #0009}
 .rs-menu button{font-size:13px;border:0;color:var(--rs-text);background:transparent;display:flex;align-items:center;gap:11px;min-height:46px;width:100%;border-radius:12px;padding:8px 12px;text-align:left}.rs-menu button[aria-current=true]{background:var(--rs-green);color:#fff}.rs-menu button span{flex:1;overflow-wrap:anywhere}.rs-menu ha-icon{--mdc-icon-size:20px;flex:none}
 .rs-menu button:focus-visible,.rs-x:focus-visible,.rs-row button:focus-visible,.rs-confirm-actions button:focus-visible{outline:2px solid var(--rs-green);outline-offset:2px}
-@media(max-width:420px){.rs-panel{padding:14px;border-radius:23px;width:min(390px,100%)}.rs-popup-title{font-size:18px}.rs-row{gap:8px;padding:10px}.rs-row-icon{width:34px;height:34px}.rs-row button{font-size:10px}}
+@media(max-width:420px){.rs-panel{padding:14px;border-radius:23px;width:min(390px,100%)}.rs-row{gap:8px;padding:10px}.rs-row-icon{width:34px;height:34px}.rs-row button{font-size:10px}}
 `;
 class RoomSelectorCard extends HTMLElement {
   static getStubConfig(){return rsConfig();}
   static getConfigElement(){return document.createElement(RS_EDITOR);}
   constructor(){
     super();this.attachShadow({mode:'open'});this._config=rsConfig();this._hass=null;
-    this._clockTimer=null;this._sig='';this._overlaySig='';this._overlay=null;this._overlayMode='';this._confirm='';this._busy=false;this._error='';this._returnFocus=null;
+    this._clockTimer=null;this._sig='';this._overlaySig='';this._overlay=null;this._overlayMode='';this._confirm='';this._busy=false;this._error='';this._feedback='';this._sentActions=new Set();this._returnFocus=null;
     this._onCardClick=e=>this._cardClick(e);this.shadowRoot.addEventListener('click',this._onCardClick);
     this._outside=e=>{if(e.target===this._overlay)this._closeOverlay();};
     this._escape=e=>{if(!this._overlay)return;if(e.key==='Escape'){e.preventDefault();this._closeOverlay();return;}if(e.key==='Tab'&&this._overlayMode==='details'){const buttons=[...this._overlay.shadowRoot.querySelectorAll('button:not([disabled])')];if(!buttons.length)return;const active=this._overlay.shadowRoot.activeElement;const index=buttons.indexOf(active);if(e.shiftKey && (index<=0)){e.preventDefault();buttons[buttons.length-1].focus();}else if(!e.shiftKey && index===buttons.length-1){e.preventDefault();buttons[0].focus();}}};
@@ -240,7 +243,7 @@ class RoomSelectorCard extends HTMLElement {
   }
   _signature(){
     const c=this._config;
-    const ids=[c.selection_entity,...c.lights,...c.climates,...c.cooling_climates,...c.alarms,...c.washers,...c.dryers,c.lock_entity,c.energy_entity,c.alarm_time_entity,c.washer_time_entity,c.dryer_time_entity,c.heating_time_entity,c.cooling_time_entity,...c.custom_indicators.flatMap(x=>x.entities)];
+    const ids=[c.selection_entity,...c.lights,...c.climates,...c.cooling_climates,...c.alarms,...c.washers,...c.dryers,c.lock_entity,c.alarm_away_script,c.lock_action_entity,c.energy_entity,c.alarm_time_entity,c.washer_time_entity,c.dryer_time_entity,c.heating_time_entity,c.cooling_time_entity,...c.custom_indicators.flatMap(x=>x.entities)];
     const input=[...new Set(ids.filter(Boolean))].map(id=>{
       const o=this._state(id);
       return [id,o?.state,o?.last_changed,o?.attributes?.options,o?.attributes?.hvac_action,o?.attributes?.hvac_modes,o?.attributes?.unit_of_measurement];
@@ -272,7 +275,7 @@ class RoomSelectorCard extends HTMLElement {
   }
   _cardClick(e){const b=e.target.closest('[data-act]');if(!b)return;const act=b.dataset.act;if(act==='menu')this._openOverlay('menu');if(act==='details')this._openOverlay('details');}
   _openOverlay(mode){
-    this._returnFocus=this.shadowRoot.activeElement;this._closeOverlay(false);this._overlayMode=mode;this._confirm='';this._error='';
+    this._returnFocus=this.shadowRoot.activeElement;this._closeOverlay(false);this._overlayMode=mode;this._confirm='';this._error='';this._feedback='';this._sentActions.clear();
     const host=document.createElement('div');host.style.cssText='position:fixed;inset:0;z-index:9999;pointer-events:none;';
     host.attachShadow({mode:'open'});this._overlay=host;document.body.appendChild(host);
     host.shadowRoot.addEventListener('click',e=>this._overlayClick(e));
@@ -294,11 +297,26 @@ class RoomSelectorCard extends HTMLElement {
     const below=window.innerHeight-r.bottom;const desired=Math.min(370,menu.scrollHeight);
     menu.style.top=`${below>=Math.min(220,desired)?Math.min(r.bottom+8,window.innerHeight-16):Math.max(8,r.top-desired-8)}px`;
   }
-  _detailRow(title,desc,icon,entity='',action=''){
-    return `<div class="rs-row"><div class="rs-row-icon"><ha-icon icon="${rsIcon(icon)}"></ha-icon></div>
-      <div class="rs-row-txt"><div class="rs-row-title">${rsEsc(title)}</div><div class="rs-row-desc">${rsEsc(desc)}</div></div>
-      ${action?`<button type="button" data-action="${rsEsc(action)}">${action==='lights-off'||action==='climates-off'?'Spegni':'Gestisci'}</button>`:entity?`<button type="button" data-more="${rsEsc(entity)}">Gestisci</button>`:''}</div>`;
-  }
+  _canArmAway(){
+ const c=this._config;
+ return !this._sentActions.has('arm-away') && !!c.alarm_away_script && c.alarms.length>0
+   && c.alarms.every(id=>this._state(id)?.state==='disarmed')
+   && this._state(c.alarm_away_script)?.state==='off';
+}
+  _canLockDoor(){
+ const c=this._config,action=c.lock_action_entity;
+ if(this._sentActions.has('lock-door')||!c.lock_entity||!action||this._state(c.lock_entity)?.state!=='unlocked')return false;
+ const domain=action.split('.')[0];
+ if(domain==='lock')return action===c.lock_entity&&this._state(action)?.state==='unlocked';
+ if(domain==='script')return this._state(action)?.state==='off';
+ return false;
+}
+  _detailRow(title,desc,icon,entity='',action='',quickAction='',quickTitle=''){
+ const item=`<div class="rs-row-icon"><ha-icon icon="${rsIcon(icon)}"></ha-icon></div>
+   <div class="rs-row-txt"><div class="rs-row-title">${rsEsc(title)}</div><div class="rs-row-desc">${rsEsc(desc)}</div></div>
+   ${action?`<button type="button" data-action="${rsEsc(action)}">${action==='lights-off'||action==='climates-off'?'Spegni':'Gestisci'}</button>`:entity?`<button type="button" data-more="${rsEsc(entity)}">Gestisci</button>`:''}`;
+ return `<div class="rs-row ${quickAction?'rs-row-action':''}">${quickAction?`<div class="rs-row-main">${item}</div><div class="rs-row-shortcut"><span>${rsEsc(quickTitle)}</span><button type="button" data-action="${rsEsc(quickAction)}" aria-label="${rsEsc(quickTitle)}">Attiva</button></div>`:item}</div>`;
+}
   _renderOverlay(){
  if(!this._overlay)return;
  const root=this._overlay.shadowRoot,palette=this._palette(),room=this._current();
@@ -328,10 +346,10 @@ class RoomSelectorCard extends HTMLElement {
      }else state='Stato: '+rsText(e.state,40);
    }
    rows.push(this._detailRow(c.alarms.length>1?(e?.attributes?.friendly_name||id):'Allarme',state,
-     !available?'mdi:shield-outline':e.state==='triggered'?'mdi:shield-alert-outline':armed?'mdi:shield-lock-outline':'mdi:shield-off-outline',id));
+     !available?'mdi:shield-outline':e.state==='triggered'?'mdi:shield-alert-outline':armed?'mdi:shield-lock-outline':'mdi:shield-off-outline',id,'',id===c.alarms[0]&&this._canArmAway()?'arm-away':'','Modalità fuori casa'));
  }
  const lock=this._lockInfo();
- rows.push(this._detailRow('Serratura',lock.label,lock.icon,c.lock_entity));
+ rows.push(this._detailRow('Serratura',lock.label,lock.icon,c.lock_entity,'',this._canLockDoor()?'lock-door':'','Blocca porta'));
  if(c.climates.length){
    const time=a.climates.length?this._timeValue(c.heating_time_entity):'';
    rows.push(this._detailRow('Termosifoni',`${a.climates.length} di ${c.climates.length} attivi${time?' · Tempo: '+time:''}`,'mdi:radiator'));
@@ -367,12 +385,12 @@ class RoomSelectorCard extends HTMLElement {
      rows.push(`<div class="rs-custom-items" aria-label="Entità ${rsEsc(ci.name)}">${list}</div>`);
    }
  }
- const names={'lights-off':'Spegnere tutte le luci accese configurate?','climates-off':'Disattivare il riscaldamento per tutti i termostati attivi configurati?'};
+ const names={'lights-off':'Spegnere tutte le luci accese configurate?','climates-off':'Disattivare il riscaldamento per tutti i termostati attivi configurati?','arm-away':'Vuoi attivare l’allarme fuori casa?','lock-door':'Vuoi bloccare la porta?'};
  root.innerHTML=`<style>${RS_OVERLAY_STYLE}</style><div class="rs-layer" data-backdrop="true"><section class="rs-panel ${palette}" role="dialog" aria-modal="true" aria-label="Dettagli e stato">
    <div class="rs-dialog-top"><strong>Dettagli e stato</strong><button type="button" class="rs-x" data-close="true" aria-label="Chiudi dettagli" data-focus="true"><ha-icon icon="mdi:close"></ha-icon></button></div>
    <div class="rs-dialog-body">${this._confirm?`<div class="rs-confirm"><p>${rsEsc(names[this._confirm]||'Confermare?')}</p><div class="rs-confirm-actions"><button data-cancel="true">Annulla</button><button class="primary" data-execute="${this._confirm}" ${this._busy?'disabled':''}>Conferma</button></div></div>`:''}
    ${rows.join('')||'<div class="rs-help">Nessun indicatore configurato.</div>'}
-   ${this._error?`<p class="rs-help" role="alert">${rsEsc(this._error)}</p>`:''}</div></section></div>`;
+   ${this._error?`<p class="rs-help" role="alert">${rsEsc(this._error)}</p>`:''}${this._feedback?`<p class="rs-help" role="status">${rsEsc(this._feedback)}</p>`:''}</div></section></div>`;
  const body=root.querySelector('.rs-dialog-body');if(body)body.scrollTop=scrollTop;
  if(focusKey){const next=[...root.querySelectorAll('button')].find(x=>x.getAttribute(focusKey)===focusValue);next?.focus?.({preventScroll:true});}
 }
@@ -383,7 +401,7 @@ class RoomSelectorCard extends HTMLElement {
     if(el.hasAttribute('data-cancel')){this._confirm='';this._renderOverlay();return;}
     if(el.hasAttribute('data-room')){this._selectRoom(el.dataset.room);return;}
     if(el.hasAttribute('data-more')){const id=el.dataset.more;this._closeOverlay();if(this._state(id))this.dispatchEvent(new CustomEvent('hass-more-info',{detail:{entityId:id},bubbles:true,composed:true}));return;}
-    if(el.hasAttribute('data-action')){this._confirm=el.dataset.action;this._renderOverlay();return;}
+    if(el.hasAttribute('data-action')){const action=el.dataset.action;if(action==='arm-away'&&!this._canArmAway())return;if(action==='lock-door'&&!this._canLockDoor())return;this._confirm=action;this._feedback='';this._renderOverlay();return;}
     if(el.hasAttribute('data-execute'))this._execute(el.dataset.execute);
   }
   async _selectRoom(option){
@@ -393,7 +411,30 @@ class RoomSelectorCard extends HTMLElement {
     catch(e){this._error=rsText(e?.message||'Selezione ambiente non riuscita',180);this._closeOverlay();this._render();}
     finally{this._busy=false;}
   }
+  async _executeSecurity(action){
+ if(this._busy || this._confirm!==action || this._overlayMode!=='details' || !this._overlay)return;
+ let domain='',service='',entity='';
+ if(action==='arm-away'&&this._canArmAway()){
+   domain='script';service='turn_on';entity=this._config.alarm_away_script;
+ }else if(action==='lock-door'&&this._canLockDoor()){
+   entity=this._config.lock_action_entity;
+   domain=entity.split('.')[0];
+   service=domain==='lock'?'lock':'turn_on';
+ }else return;
+ this._busy=true;this._error='';this._feedback='';
+ this._renderOverlay();
+ try{
+   await this._hass.callService(domain,service,{entity_id:entity});
+   this._sentActions.add(action);this._confirm='';
+   this._feedback='Comando inviato. Verifica lo stato aggiornato in Home Assistant.';
+ }catch(error){
+   this._confirm='';this._error=rsText(error?.message||'Comando non riuscito',180);
+ }finally{
+   this._busy=false;this._renderOverlay();
+ }
+}
   async _execute(action){
+    if(action==='arm-away'||action==='lock-door')return this._executeSecurity(action);
     if(this._busy||!this._config.controls_enabled)return;
     const a=this._active();let domain,service,ids,data;
     if(action==='lights-off'){domain='light';service='turn_off';ids=a.lights;data={entity_id:ids};}
@@ -494,6 +535,9 @@ class RoomSelectorCardEditor extends HTMLElement {
       body='<div class="rs-e-heading">Stato generale della casa</div><div class="rs-e-desc">Allarme e serratura sono sempre visibili sulla card; gli altri indicatori compaiono soltanto quando attivi. I dati sono indipendenti dall’ambiente selezionato.</div>'+
         this._multi('alarms','Allarmi',RS_DOMAINS.alarms)+
         this._field('Serratura della porta','lock_entity','lock.*')+
+        '<div class="rs-e-heading">Azioni di sicurezza</div><div class="rs-e-desc">Azioni opzionali con conferma. Per bloccare la porta scegli la stessa entità lock monitorata oppure uno script dedicato. Non è previsto lo sblocco.</div>'+
+        this._field('Script: attiva allarme fuori casa','alarm_away_script','script.*')+
+        this._field('Entità: blocca porta (lock / script)','lock_action_entity','lock.* / script.*')+
         this._multi('climates','Termosifoni / valvole',RS_DOMAINS.climates)+
         this._multi('washers','Lavatrice (stato)',RS_DOMAINS.washers)+
         this._multi('dryers','Asciugatrice (stato)',RS_DOMAINS.dryers)+
