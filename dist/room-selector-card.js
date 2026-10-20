@@ -88,41 +88,45 @@ function rsDuration(date) {
   return hours<24?`da ${hours} ${hours===1?'ora':'ore'}`:`da ${Math.floor(hours/24)} ${Math.floor(hours/24)===1?'giorno':'giorni'}`;
 }
 const RS_STYLE = `
-:host{display:block;min-width:0;container-type:inline-size;font-family:var(--paper-font-body1_-_font-family,Roboto,Arial,sans-serif)}
-.rs-card{--rs-bg:var(--ha-card-background,var(--card-background-color,#17201c));--rs-text:var(--primary-text-color,#eef3f0);--rs-muted:var(--secondary-text-color,#b0bcb5);--rs-surface:var(--secondary-background-color,#232c27);--rs-line:var(--divider-color,#36453e);--rs-green:#08795c;background:var(--rs-bg);color:var(--rs-text);border:1px solid var(--rs-line);border-radius:25px;padding:20px 21px 17px;box-shadow:var(--ha-card-box-shadow,0 4px 18px #00000018);position:relative;min-width:0;}
-.rs-card.rs-dark{--rs-bg:#171b19;--rs-text:#f2f5f2;--rs-muted:#aebbb3;--rs-surface:#232a26;--rs-line:#324139;--rs-green:#08795c;}
-.rs-card.rs-light{--rs-bg:#fff;--rs-text:#17221b;--rs-muted:#5e7267;--rs-surface:#f0f4f1;--rs-line:#dbe5dd;--rs-green:#08795c;}
-.rs-header{display:flex;gap:12px;justify-content:space-between;align-items:center;min-width:0}.rs-headtext{min-width:0}.rs-eyebrow{font-size:11px;letter-spacing:1.7px;font-weight:700;color:var(--rs-muted);margin:0 0 7px;text-transform:uppercase;line-height:1.1}
-.rs-title{font-size:clamp(24px,5.8cqw,31px);font-weight:760;line-height:1.14;margin:0;min-width:0;overflow-wrap:anywhere;letter-spacing:-.8px}.rs-dot{color:#16b88c}
-.rs-toggle{background:var(--rs-green);color:#fff;border:1px solid #ffffff1a;min-width:46px;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;cursor:pointer;flex:none}
-.rs-toggle:focus-visible,.rs-chip:focus-visible,.rs-details:focus-visible{outline:3px solid var(--primary-color,#41b396);outline-offset:3px}
-.rs-toggle ha-icon{--mdc-icon-size:22px}
-.rs-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
-.rs-chip{appearance:none;border:1px solid var(--rs-line);background:var(--rs-surface);color:var(--rs-text);border-radius:13px;padding:9px 12px;min-height:40px;display:inline-flex;align-items:center;gap:8px;font:inherit;font-size:12px;font-weight:600;max-width:100%;cursor:pointer;white-space:normal;text-align:left}
+:host{display:block;min-width:0;container-type:inline-size;font-family:var(--ha-font-family-body,var(--paper-font-body1_-_font-family,Roboto,Arial,sans-serif));font-size:14px}
+*,*:before,*:after{box-sizing:border-box}button,input,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}
+.rs-card{--rs-green:#0a7156;--rs-bg:#fafbf9;--rs-text:#18221c;--rs-muted:#56675c;--rs-surface:#f0f2ef;--rs-circle:#fff;--rs-line:#e0e5df;background:var(--rs-bg);color:var(--rs-text);border:1px solid var(--rs-line);border-radius:26px;padding:18px;min-width:0;position:relative}
+.rs-card.rs-dark{--rs-green:#0e795d;--rs-bg:#101211;--rs-text:#f5f7f4;--rs-muted:#bbc5bd;--rs-surface:#191c1a;--rs-circle:#282b29;--rs-line:#2b302c}
+.rs-card.rs-light{--rs-green:#0a7156;--rs-bg:#fafbf9;--rs-text:#18221c;--rs-muted:#56675c;--rs-surface:#f0f2ef;--rs-circle:#fff;--rs-line:#e0e5df}
+.rs-header{display:flex;gap:12px;justify-content:space-between;align-items:center;min-width:0;margin:2px 4px 0}.rs-headtext{min-width:0}.rs-eyebrow{font-size:10px;letter-spacing:1.7px;font-weight:750;color:var(--rs-muted);margin:0 0 7px;text-transform:uppercase;line-height:1.1}
+.rs-title{font-size:clamp(23px,5.8cqw,25px);font-weight:780;line-height:1.14;margin:0;min-width:0;overflow-wrap:anywhere;letter-spacing:-.7px}.rs-dot{color:var(--rs-green)}
+.rs-toggle{background:var(--rs-green);color:#fff;border:0;min-width:42px;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;cursor:pointer;flex:none}.rs-toggle ha-icon{--mdc-icon-size:21px}
+.rs-toggle:focus-visible,.rs-chip:focus-visible,.rs-details:focus-visible{outline:2px solid var(--rs-green);outline-offset:3px}
+.rs-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px}
+.rs-chip{border:1px solid var(--rs-line);background:var(--rs-surface);color:var(--rs-text);border-radius:14px;padding:9px 11px;min-height:40px;display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600;max-width:100%;white-space:normal;text-align:left}
 .rs-chip ha-icon{--mdc-icon-size:18px;flex:none}.rs-chip.light ha-icon{color:#e4b24d}.rs-chip.climate ha-icon{color:#eb9654}.rs-chip.alarm ha-icon{color:#0b9b77}.rs-chip.alarm-critical ha-icon{color:#db6867}.rs-chip.washer ha-icon{color:#87a7ba}
-.rs-bottom{margin-top:15px;display:flex;justify-content:flex-start}.rs-details{border:0;background:var(--rs-green);color:white;font:inherit;font-size:12px;font-weight:700;border-radius:14px;padding:10px 15px;display:inline-flex;align-items:center;gap:9px;min-height:39px;cursor:pointer}
-.rs-details ha-icon{--mdc-icon-size:17px}.rs-notice{font-size:12px;color:var(--rs-muted);margin-top:13px}.rs-error{font-size:12px;color:var(--error-color,#d86d60);margin-top:10px;overflow-wrap:anywhere}
-@container(max-width:360px){.rs-card{padding:15px 14px;border-radius:20px}.rs-title{font-size:24px}.rs-chips{gap:6px;margin-top:13px}.rs-chip{font-size:11px;padding:8px 9px;min-height:38px}.rs-toggle{min-width:40px;width:40px;height:40px}.rs-bottom{margin-top:12px}}
+.rs-bottom{margin-top:14px;display:flex;justify-content:flex-start}.rs-details{border:0;background:var(--rs-green);color:#fff;font-size:11px;font-weight:650;border-radius:999px;padding:7px 11px;display:inline-flex;align-items:center;gap:6px;min-height:30px;line-height:1.2}
+.rs-details ha-icon{--mdc-icon-size:14px}.rs-notice{font-size:12px;color:var(--rs-muted);margin:13px 4px 0;line-height:1.45}.rs-error{font-size:12px;color:var(--error-color,#d86d60);margin-top:10px;overflow-wrap:anywhere}
+@container(max-width:360px){.rs-card{padding:13px;border-radius:23px}.rs-title{font-size:23px}.rs-chips{gap:6px;margin-top:12px}.rs-chip{font-size:11px;padding:7px 9px;min-height:36px}.rs-toggle{min-width:38px;width:38px;height:38px}.rs-bottom{margin-top:12px}}
 @media(prefers-reduced-motion:reduce){.rs-toggle,.rs-chip,.rs-details{transition:none!important}}
 `;
 const RS_OVERLAY_STYLE = `
-:host{font-family:var(--paper-font-body1_-_font-family,Roboto,Arial,sans-serif)}
-.rs-layer{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:15px;box-sizing:border-box;background:#070f0cad;overscroll-behavior:contain;pointer-events:auto}
+:host{font-family:var(--ha-font-family-body,var(--paper-font-body1_-_font-family,Roboto,Arial,sans-serif));font-size:14px}
+*,*:before,*:after{box-sizing:border-box}button{font:inherit;cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}
+.rs-layer{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;background:#0009;overscroll-behavior:contain;pointer-events:auto}
 .rs-layer.menu-layer{background:transparent;pointer-events:auto;align-items:initial;justify-content:initial;padding:0}
-.rs-panel,.rs-menu{box-sizing:border-box;--rs-bg:var(--ha-card-background,var(--card-background-color,#171b19));--rs-text:var(--primary-text-color,#eff5f0);--rs-muted:var(--secondary-text-color,#b6c2ba);--rs-line:var(--divider-color,#34443a);--rs-surface:var(--secondary-background-color,#222a26);background:var(--rs-bg);color:var(--rs-text);border:1px solid var(--rs-line);border-radius:22px;box-shadow:0 22px 64px #0009;min-width:0}
-.rs-panel.rs-dark,.rs-menu.rs-dark{--rs-bg:#171b19;--rs-text:#f1f4f2;--rs-muted:#aebbb3;--rs-line:#324139;--rs-surface:#242a27}
-.rs-panel.rs-light,.rs-menu.rs-light{--rs-bg:#fff;--rs-text:#17221b;--rs-muted:#617269;--rs-line:#dbe5dd;--rs-surface:#f1f4f2}
-.rs-panel{width:min(520px,100%);max-height:min(680px,calc(100dvh - 32px));display:flex;flex-direction:column;overflow:hidden}
-.rs-dialog-top{display:flex;align-items:center;gap:11px;padding:20px 19px 16px;border-bottom:1px solid var(--rs-line);flex:none;background:var(--rs-bg)}
-.rs-big-icon{width:44px;height:44px;flex:none;border-radius:50%;background:#0a70573b;color:#15af85;display:grid;place-items:center}
-.rs-big-icon ha-icon{--mdc-icon-size:25px}.rs-popup-titles{flex:1;min-width:0}.rs-eyebrow{letter-spacing:1.5px;font-size:10px;color:var(--rs-muted);font-weight:700}.rs-popup-title{font-weight:750;font-size:23px;line-height:1.2;overflow-wrap:anywhere}.rs-dot{color:#16b88c}.rs-x{width:38px;height:38px;flex:none;display:grid;place-items:center;border-radius:50%;background:var(--rs-surface);border:1px solid var(--rs-line);color:var(--rs-text);cursor:pointer}
-.rs-dialog-body{padding:16px 18px 18px;overflow:auto;overscroll-behavior:contain;min-height:0}.rs-row{display:flex;align-items:center;gap:12px;background:var(--rs-surface);border:1px solid var(--rs-line);padding:12px;border-radius:14px;min-width:0;margin-bottom:8px}
-.rs-row-icon{color:#23ab89;width:34px;flex:none}.rs-row-icon ha-icon{--mdc-icon-size:24px}.rs-row-txt{flex:1;min-width:0}.rs-row-title{font-size:14px;font-weight:650}.rs-row-desc{font-size:12px;color:var(--rs-muted);margin-top:3px;overflow-wrap:anywhere}.rs-row button{border:1px solid var(--rs-line);border-radius:10px;color:var(--rs-text);background:var(--rs-bg);padding:8px 10px;font:inherit;font-size:12px;cursor:pointer;min-height:36px}
-.rs-help{font-size:12px;color:var(--rs-muted);line-height:1.5;margin:11px 2px}.rs-confirm{border:1px solid #bd8a4e;background:#b17c2a1c;padding:13px;border-radius:12px;margin-bottom:12px}.rs-confirm p{font-size:13px;margin:0 0 10px}.rs-confirm-actions{display:flex;gap:9px}.rs-confirm-actions button{border-radius:10px;min-height:40px;font:inherit;font-size:12px;border:1px solid var(--rs-line);padding:8px 13px;color:var(--rs-text);background:var(--rs-surface);cursor:pointer}.rs-confirm-actions button.primary{background:#08795c;border-color:#08795c;color:#fff}
-.rs-menu{position:fixed;max-height:min(460px,calc(100dvh - 20px));overflow:auto;min-width:220px;max-width:calc(100vw - 16px);padding:8px;border-radius:18px}
-.rs-menu button{font:inherit;font-size:14px;border:0;color:var(--rs-text);background:transparent;display:flex;align-items:center;gap:11px;min-height:49px;width:100%;border-radius:12px;cursor:pointer;padding:8px 12px;text-align:left}
-.rs-menu button[aria-current=true]{background:#08795c;color:#fff}.rs-menu button span{flex:1;overflow-wrap:anywhere}.rs-menu ha-icon{--mdc-icon-size:21px;flex:none}.rs-menu button:focus-visible,.rs-x:focus-visible,.rs-row button:focus-visible,.rs-confirm-actions button:focus-visible{outline:3px solid var(--primary-color,#5abf9e);outline-offset:2px}
-@media(max-width:420px){.rs-dialog-top{padding:14px}.rs-dialog-body{padding:12px}.rs-panel{border-radius:19px}.rs-popup-title{font-size:20px}}
+.rs-panel,.rs-menu{--rs-green:#0a7156;--rs-bg:#fafbf9;--rs-text:#18221c;--rs-muted:#56675c;--rs-surface:#f0f2ef;--rs-circle:#fff;--rs-line:#e0e5df;background:var(--rs-bg);color:var(--rs-text);border:1px solid var(--rs-line);border-radius:26px;box-shadow:0 18px 60px #0005;min-width:0}
+.rs-panel.rs-dark,.rs-menu.rs-dark{--rs-green:#0e795d;--rs-bg:#101211;--rs-text:#f5f7f4;--rs-muted:#bbc5bd;--rs-surface:#191c1a;--rs-circle:#282b29;--rs-line:#2b302c}
+.rs-panel.rs-light,.rs-menu.rs-light{--rs-green:#0a7156;--rs-bg:#fafbf9;--rs-text:#18221c;--rs-muted:#56675c;--rs-surface:#f0f2ef;--rs-circle:#fff;--rs-line:#e0e5df}
+.rs-panel{width:min(390px,100%);max-height:min(90dvh,720px);display:flex;flex-direction:column;overflow:hidden;padding:18px}
+.rs-dialog-top{display:flex;align-items:center;gap:10px;min-height:38px;margin:0 0 12px;background:var(--rs-bg);flex:none}
+.rs-big-icon{width:39px;height:39px;flex:none;border-radius:50%;background:var(--rs-circle);color:var(--rs-text);display:grid;place-items:center}.rs-big-icon ha-icon{--mdc-icon-size:21px}
+.rs-popup-titles{flex:1;min-width:0}.rs-eyebrow{letter-spacing:1.5px;font-size:10px;color:var(--rs-muted);font-weight:750;margin-bottom:4px}.rs-popup-title{font-weight:650;font-size:19px;line-height:1.2;overflow-wrap:anywhere}.rs-dot{color:var(--rs-green)}
+.rs-x{width:36px;height:36px;flex:none;display:grid;place-items:center;border-radius:50%;background:var(--rs-surface);border:0;color:var(--rs-text);padding:0}.rs-x ha-icon{--mdc-icon-size:18px}
+.rs-dialog-body{padding:0 2px 2px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;min-height:0;scrollbar-gutter:stable}
+.rs-row{display:flex;align-items:center;gap:10px;background:var(--rs-surface);border:1px solid var(--rs-line);padding:11px 12px;border-radius:14px;min-width:0;margin:0 0 9px;min-height:66px}
+.rs-row-icon{width:38px;height:38px;display:grid;place-items:center;flex:none;border-radius:50%;color:var(--rs-text);background:var(--rs-circle)}.rs-row-icon ha-icon{--mdc-icon-size:20px}
+.rs-row-txt{flex:1;min-width:0}.rs-row-title{font-size:13px;font-weight:650}.rs-row-desc{font-size:12px;color:var(--rs-muted);margin-top:3px;overflow-wrap:anywhere}.rs-row button{border:1px solid var(--rs-line);border-radius:999px;color:var(--rs-text);background:var(--rs-circle);padding:8px 10px;font-size:11px;min-height:32px;white-space:nowrap;flex:none}
+.rs-help{font-size:12px;color:var(--rs-muted);line-height:1.5;margin:11px 2px}.rs-confirm{border:1px solid #bd8a4e;background:#b17c2a1c;padding:12px;border-radius:14px;margin-bottom:12px}.rs-confirm p{font-size:13px;margin:0 0 10px}.rs-confirm-actions{display:flex;gap:9px}.rs-confirm-actions button{border-radius:999px;min-height:36px;font-size:12px;border:1px solid var(--rs-line);padding:7px 12px;color:var(--rs-text);background:var(--rs-circle)}.rs-confirm-actions button.primary{background:var(--rs-green);border-color:var(--rs-green);color:#fff}
+.rs-menu{position:fixed;max-height:min(460px,calc(100dvh - 20px));overflow-y:auto;overflow-x:hidden;min-width:220px;max-width:calc(100vw - 16px);padding:8px;border-radius:18px;box-shadow:0 18px 60px #0009}
+.rs-menu button{font-size:13px;border:0;color:var(--rs-text);background:transparent;display:flex;align-items:center;gap:11px;min-height:46px;width:100%;border-radius:12px;padding:8px 12px;text-align:left}.rs-menu button[aria-current=true]{background:var(--rs-green);color:#fff}.rs-menu button span{flex:1;overflow-wrap:anywhere}.rs-menu ha-icon{--mdc-icon-size:20px;flex:none}
+.rs-menu button:focus-visible,.rs-x:focus-visible,.rs-row button:focus-visible,.rs-confirm-actions button:focus-visible{outline:2px solid var(--rs-green);outline-offset:2px}
+@media(max-width:420px){.rs-panel{padding:14px;border-radius:23px;width:min(390px,100%)}.rs-popup-title{font-size:18px}.rs-row{gap:8px;padding:10px}.rs-row-icon{width:34px;height:34px}.rs-row button{font-size:10px}}
 `;
 class RoomSelectorCard extends HTMLElement {
   static getStubConfig(){return rsConfig();}
@@ -141,7 +145,7 @@ class RoomSelectorCard extends HTMLElement {
   set hass(hass){this._hass=hass;const old=this._sig;this._render();if(this._overlayMode==='details'&&old!==this._sig)this._renderOverlay();}
   getCardSize(){return 3;}
   _state(id){return id ? this._hass?.states?.[id]:null;}
-  _palette(){const m=this._config.theme_mode;return m==='auto'?'':`rs-${m}`;}
+  _palette(){const m=this._config.theme_mode;return `rs-${m==='auto'?(this._hass?.themes?.darkMode===true?'dark':'light'):m}`;}
   _options(){const obj=this._state(this._config.selection_entity);return Array.isArray(obj?.attributes?.options)?obj.attributes.options.filter(x=>typeof x==='string').slice(0,80):[];}
   _current(){const state=this._state(this._config.selection_entity);return rsKnown(state)?state.state:'';}
   _roomIcon(room){return this._config.room_icons[room]||rsDefaultIcon(room);}
@@ -226,7 +230,7 @@ class RoomSelectorCard extends HTMLElement {
     if(c.alarm_entity){const alarm=this._state(c.alarm_entity);const text=!rsKnown(alarm)?'Stato non disponibile':alarm.state==='disarmed'?'Disinserito':alarm.state==='triggered'?'Allarme in corso':RS_ARMED.has(alarm.state)?`Inserito ${rsDuration(alarm.last_changed)}`:alarm.state==='arming'||alarm.state==='pending'?'Transizione in corso':`Stato: ${alarm.state}`;rows.push(this._detailRow('Allarme',text,'mdi:shield-lock-outline',c.alarm_entity));}
     if(c.washer_entity){const washer=this._state(c.washer_entity);rows.push(this._detailRow('Lavatrice',!rsKnown(washer)?'Stato non disponibile':a.washer?'In funzione':'Non in funzione','mdi:washing-machine',c.washer_entity));}
     const energy=this._state(c.energy_entity);if(c.energy_entity){
-      const amount=rsKnown(energy)&&Number.isFinite(Number(energy.state))?`${energy.state} ${energy.attributes?.unit_of_measurement||''}`.trim():'Dato non disponibile';
+      const amount=rsKnown(energy)&&Number.isFinite(Number(energy.state))?`${new Intl.NumberFormat('it-IT',{maximumFractionDigits:2}).format(Number(energy.state))} ${rsText(energy.attributes?.unit_of_measurement||'',20)}`.trim():'Dato non disponibile';
       rows.push(this._detailRow('Energia del mese',amount,'mdi:lightning-bolt',c.energy_entity));
     }
     const names={ 'lights-off':'Spegnere tutte le luci accese configurate?', 'climates-off':'Disattivare il riscaldamento per tutti i termostati attivi configurati?' };
@@ -234,7 +238,6 @@ class RoomSelectorCard extends HTMLElement {
       <div class="rs-dialog-top"><div class="rs-big-icon"><ha-icon icon="${rsIcon(this._roomIcon(room))}"></ha-icon></div><div class="rs-popup-titles"><div class="rs-eyebrow">DETTAGLI AMBIENTE</div><div class="rs-popup-title">${rsEsc(room||'Ambiente')}<span class="rs-dot">.</span></div></div><button type="button" class="rs-x" data-close="true" aria-label="Chiudi dettagli" data-focus="true"><ha-icon icon="mdi:close"></ha-icon></button></div>
       <div class="rs-dialog-body">${this._confirm?`<div class="rs-confirm"><p>${rsEsc(names[this._confirm]||'Confermare?')}</p><div class="rs-confirm-actions"><button data-cancel="true">Annulla</button><button class="primary" data-execute="${this._confirm}" ${this._busy?'disabled':''}>Conferma</button></div></div>`:''}
       ${rows.length?rows.join(''):'<div class="rs-help">Nessun indicatore configurato. Aggiungi le entità dall’editor visuale.</div>'}
-      <p class="rs-help">Solo gli stati attivi compaiono sulla card. I comandi richiedono abilitazione esplicita. Allarme e lavatrice si gestiscono dall’interfaccia nativa di Home Assistant.</p>
       ${this._error?`<p class="rs-help" role="alert">${rsEsc(this._error)}</p>`:''}</div></section></div>`;
   }
   _overlayClick(e){
@@ -271,41 +274,75 @@ class RoomSelectorCard extends HTMLElement {
   }
 }
 const RS_EDITOR_STYLE = `
-:host{display:block;font-family:var(--paper-font-body1_-_font-family,Roboto,Arial,sans-serif);color:var(--primary-text-color)}
-.rs-edit{display:grid;gap:14px;padding:4px 0}.rs-e-section{border:1px solid var(--divider-color,#d5ded7);border-radius:13px;padding:14px}.rs-e-section h3{margin:0 0 13px;font-size:15px}.rs-e-field{margin:9px 0}.rs-e-field label{display:block;font-size:12px;font-weight:600;margin-bottom:7px}.rs-e-field input[type=text],.rs-e-field select{padding:10px;border:1px solid var(--divider-color,#bac9be);border-radius:9px;box-sizing:border-box;width:100%;background:var(--card-background-color,#fff);color:var(--primary-text-color);font:inherit}.rs-e-field ha-selector{display:block;width:100%}.rs-e-fallback{display:none}.rs-e-no-native .rs-e-fallback{display:block}.rs-e-help{font-size:12px;color:var(--secondary-text-color);margin:8px 0}.rs-e-line{display:flex;align-items:center;gap:9px;margin-top:7px}.rs-e-line>*:first-child{flex:1;min-width:0}.rs-e-line button,.rs-e-button{border:1px solid var(--divider-color);background:var(--secondary-background-color);color:var(--primary-text-color);border-radius:9px;padding:8px 11px;cursor:pointer}.rs-e-check{display:flex;align-items:center;gap:9px;font-size:13px}.rs-e-check input{width:18px;height:18px;accent-color:#08795c}.rs-e-item{display:flex;align-items:center;gap:8px;margin:8px 0}.rs-e-item span{flex:1;overflow-wrap:anywhere;font-size:12px}
+:host{display:block;color:var(--primary-text-color,#18221c);font-family:var(--ha-font-family-body,Roboto,Arial,sans-serif);font-size:var(--ha-font-size-m,14px)}
+*,*:before,*:after{box-sizing:border-box}button,input,select{font:inherit}button{cursor:pointer}
+.rs-edit{display:block}.rs-e-tabs{display:flex;gap:5px;overflow-x:auto;padding-bottom:14px;border-bottom:1px solid var(--divider-color,#dfe5df)}
+.rs-e-tab{border:0;background:transparent;color:var(--secondary-text-color,#536359);border-radius:13px;padding:10px 13px;white-space:nowrap}.rs-e-tab.active{color:var(--primary-text-color,#17231c);background:var(--secondary-background-color,#f0f2ef);font-weight:650}
+.rs-e-heading{font-size:21px;font-weight:500;margin:25px 0 9px}.rs-e-desc{color:var(--secondary-text-color,#55665a);font-size:13px;line-height:1.5;margin-bottom:24px}
+.rs-e-field{margin:20px 0}.rs-e-field label,.rs-e-label{display:block;font-size:14px;margin-bottom:10px;font-weight:400}.rs-e-input{display:block;width:100%;background:var(--secondary-background-color,#f0f2ef);color:var(--primary-text-color,#18221c);border:0;border-bottom:1px solid var(--divider-color,#a5afa5);padding:14px 13px;min-height:50px;border-radius:11px 11px 0 0}
+.rs-e-field ha-selector{display:block;width:100%;--mdc-theme-primary:var(--primary-color,#0b7457)}.rs-e-fallback{display:none}.rs-e-no-native .rs-e-fallback{display:block}.rs-e-no-native [data-selector]{display:none}
+.rs-e-help{font-size:12px;line-height:1.5;color:var(--secondary-text-color,#5e6c62);margin:9px 0}.rs-e-line{display:flex;align-items:center;gap:8px;min-width:0}.rs-e-selector{flex:1;min-width:0}
+.rs-e-button{background:var(--secondary-background-color,#eff2ee);border:1px solid var(--divider-color,#dbe2db);color:var(--primary-text-color,#18221c);padding:9px 12px;border-radius:14px}.rs-e-button:disabled{opacity:.45;cursor:not-allowed}.rs-e-clear{display:flex;align-items:center;justify-content:center;flex:none;width:36px;height:36px;background:var(--secondary-background-color,#eef1ef);border:1px solid var(--divider-color,#dfe5df);border-radius:50%;color:var(--secondary-text-color,#57655c);padding:0}.rs-e-clear ha-icon{--mdc-icon-size:18px}
+.rs-e-check{border-bottom:1px solid var(--divider-color,#e3e7e3);padding:13px 0;display:flex;align-items:center;justify-content:space-between;gap:15px;font-size:13px}.rs-e-check input{width:18px;height:18px;accent-color:var(--primary-color,#0c7157);flex:none}
+.rs-e-item{display:flex;align-items:center;gap:9px;padding:10px 0;border-bottom:1px solid var(--divider-color,#e3e7e3)}.rs-e-item span{flex:1;overflow-wrap:anywhere;font-size:13px}.rs-e-room{border-bottom:1px solid var(--divider-color,#e3e7e3);padding:12px 0 16px}.rs-e-room-title{font-size:13px;font-weight:650;margin-bottom:8px}.rs-e-icon-line{display:flex;align-items:center;gap:12px}.rs-e-icon-line ha-icon{--mdc-icon-size:24px;flex:none;color:var(--primary-text-color)}
+.rs-e-input:focus-visible,.rs-e-button:focus-visible,.rs-e-tab:focus-visible,.rs-e-clear:focus-visible{outline:2px solid var(--primary-color,#0b7457);outline-offset:2px}
 `;
 class RoomSelectorCardEditor extends HTMLElement {
-  constructor(){super();this.attachShadow({mode:'open'});this._config=rsConfig();this._hass=null;this._attempted=false;
+  constructor(){super();this.attachShadow({mode:'open'});this._config=rsConfig();this._hass=null;this._attempted=false;this._tab='ambienti';this._optionsSig='';
     this.shadowRoot.addEventListener('click',e=>this._click(e));this.shadowRoot.addEventListener('change',e=>this._change(e));}
-  set hass(hass){this._hass=hass;this.shadowRoot.querySelectorAll('ha-selector').forEach(el=>el.hass=hass);}
-  setConfig(raw){this._config=rsConfig(raw);this._render();}
+  set hass(hass){this._hass=hass;this.shadowRoot.querySelectorAll('ha-selector').forEach(el=>el.hass=hass);const options=hass?.states?.[this._config.selection_entity]?.attributes?.options;const sig=JSON.stringify(Array.isArray(options)?options:[]);if(sig!==this._optionsSig){this._optionsSig=sig;this._render();}}
+  setConfig(raw){const cfg=rsConfig(raw);if(JSON.stringify(cfg)===JSON.stringify(this._config)&&this.shadowRoot.querySelector('.rs-edit'))return;this._config=cfg;this._render();}
   connectedCallback(){this._render();this._ensureNative();}
   async _ensureNative(){if(this._attempted)return;this._attempted=true;
     if(!customElements.get('ha-selector')){try{const helper=await window.loadCardHelpers?.();await helper?.importSelector?.();}catch{/* Inputs remain usable */}}
     this._render();}
   _update(patch){this._config=rsConfig({...this._config,...patch});this.dispatchEvent(new CustomEvent('config-changed',{detail:{config:this._config},bubbles:true,composed:true}));this._render();}
-  _field(label,key,placeholder=''){return `<div class="rs-e-field"><label>${rsEsc(label)}</label><div data-selector="${key}"></div><div class="rs-e-fallback"><input type="text" data-field="${key}" placeholder="${rsEsc(placeholder)}" value="${rsEsc(this._config[key]||'')}"></div></div>`;}
-  _multi(key,label,domains){
-    return `<div class="rs-e-field"><label>${rsEsc(label)}</label>${this._config[key].map(id=>`<div class="rs-e-item"><span>${rsEsc(id)}</span><button type="button" data-remove="${key}" data-id="${rsEsc(id)}" aria-label="Rimuovi ${rsEsc(id)}"><ha-icon icon="mdi:close"></ha-icon></button></div>`).join('')}
-    <div class="rs-e-line"><div data-selector="${key}" data-add="true"></div></div>
-    <div class="rs-e-fallback"><input type="text" data-field="${key}" placeholder="${domains[0]}.*" value=""/></div></div>`;
+  _field(label,key,placeholder=''){
+    const val=this._config[key]||'';
+    return `<div class="rs-e-field"><label>${rsEsc(label)}</label><div class="rs-e-line"><div class="rs-e-selector"><div data-selector="${key}"></div><div class="rs-e-fallback"><input class="rs-e-input" type="text" data-field="${key}" placeholder="${rsEsc(placeholder)}" value="${rsEsc(val)}"/></div></div>${val?`<button type="button" class="rs-e-clear" data-clear="${key}" aria-label="Rimuovi ${rsEsc(label)}"><ha-icon icon="mdi:close"></ha-icon></button>`:''}</div></div>`;
   }
-  _render(){if(!this.isConnected)return;const c=this._config;const room=this._hass?.states?.[c.selection_entity];const options=Array.isArray(room?.attributes?.options)?room.attributes.options:[];
-    this.shadowRoot.innerHTML=`<style>${RS_EDITOR_STYLE}</style><div class="rs-edit ${customElements.get('ha-selector')?'':'rs-e-no-native'}">
-      <section class="rs-e-section"><h3>Ambienti</h3>${this._field('Selettore ambienti (input_select / select)','selection_entity','input_select.*')}
-      <div class="rs-e-help">Riutilizza l’entità che controlla già il contenuto della dashboard.</div>
-      ${options.length?`<div class="rs-e-help">Opzioni rilevate: ${options.map(x=>rsEsc(x)).join(', ')}</div>`:''}
-      ${options.map(n=>`<div class="rs-e-field"><label>Icona di ${rsEsc(n)}</label><input type="text" data-icon-name="${rsEsc(n)}" value="${rsEsc(c.room_icons[n]||rsDefaultIcon(n))}" placeholder="mdi:home-outline" /></div>`).join('')}
-      </section>
-      <section class="rs-e-section"><h3>Indicatori attivi</h3>${this._multi('lights','Luci',RS_DOMAINS.lights)}${this._multi('climates','Termostati',RS_DOMAINS.climates)}
-      ${this._field('Allarme','alarm_entity','alarm_control_panel.*')}${this._field('Lavatrice (stato)','washer_entity','binary_sensor.*')}
-      <div class="rs-e-field"><label>Valore che indica lavatrice attiva</label><input type="text" data-field="washer_active_state" value="${rsEsc(c.washer_active_state)}"/></div></section>
-      <section class="rs-e-section"><h3>Dettagli e comandi</h3>${this._field('Sensore energia consumata nel mese (opzionale)','energy_entity','sensor.*')}
-      <div class="rs-e-field"><label>Tema</label><select data-field="theme_mode">${['auto','light','dark'].map(x=>`<option value="${x}" ${c.theme_mode===x?'selected':''}>${x}</option>`).join('')}</select></div>
-      <label class="rs-e-check"><input type="checkbox" data-field="show_details_button" ${c.show_details_button?'checked':''}/>Mostra “Dettagli e stato”</label>
-      <label class="rs-e-check"><input type="checkbox" data-field="controls_enabled" ${c.controls_enabled?'checked':''}/>Abilita i comandi luci e riscaldamento (con conferma)</label>
-      <p class="rs-e-help">I comandi rimangono disabilitati per impostazione predefinita. Per allarme e lavatrice vengono usati i dettagli nativi Home Assistant.</p></section>
-    </div>`;this._mountSelectors();}
+  _multi(key,label,domains){
+    return `<div class="rs-e-field"><div class="rs-e-label">${rsEsc(label)}</div>${this._config[key].map(id=>`<div class="rs-e-item"><span>${rsEsc(id)}</span><button type="button" class="rs-e-clear" data-remove="${key}" data-id="${rsEsc(id)}" aria-label="Rimuovi ${rsEsc(id)}"><ha-icon icon="mdi:close"></ha-icon></button></div>`).join('')}
+    <div class="rs-e-line"><div class="rs-e-selector"><div data-selector="${key}" data-add="true"></div><div class="rs-e-fallback"><input class="rs-e-input" type="text" data-field="${key}" placeholder="${domains[0]}.*" value=""/></div></div></div></div>`;
+  }
+  _check(key,label,help=''){
+    return `<label class="rs-e-check"><span>${rsEsc(label)}${help?`<div class="rs-e-help">${rsEsc(help)}</div>`:''}</span><input type="checkbox" data-field="${key}" ${this._config[key]?'checked':''}/></label>`;
+  }
+  _render(){
+    if(!this.isConnected)return;
+    const c=this._config, current=this._hass?.states?.[c.selection_entity];
+    const options=Array.isArray(current?.attributes?.options)?current.attributes.options.filter(x=>typeof x==='string').slice(0,80):[];
+    const tabs=[['ambienti','Ambienti'],['indicatori','Indicatori'],['aspetto','Aspetto'],['avanzate','Avanzate']];
+    let body='';
+    if(this._tab==='ambienti'){
+      body='<div class="rs-e-heading">Selezione ambienti</div><div class="rs-e-desc">Collega il selettore già utilizzato dalla dashboard. Le opzioni vengono lette automaticamente, senza ricreare gli ambienti.</div>'+
+        this._field('Selettore ambienti (input_select / select)','selection_entity','input_select.*')+
+        (options.length?'<div class="rs-e-heading">Icone degli ambienti</div><div class="rs-e-desc">Personalizza le icone MDI utilizzate dal menu. Ogni ambiente conserva il proprio nome originale.</div>'+options.map(name=>{
+          const icon=rsIcon(c.room_icons[name],rsDefaultIcon(name));return `<div class="rs-e-room"><div class="rs-e-room-title">${rsEsc(name)}</div><div class="rs-e-icon-line"><ha-icon icon="${icon}"></ha-icon><input class="rs-e-input" type="text" data-icon-name="${rsEsc(name)}" value="${icon}" placeholder="mdi:home-outline" aria-label="Icona di ${rsEsc(name)}"/></div></div>`;
+        }).join(''):'<div class="rs-e-help">Seleziona un helper con ambienti disponibili per configurare le relative icone.</div>');
+    }
+    if(this._tab==='indicatori'){
+      body='<div class="rs-e-heading">Indicatori attivi</div><div class="rs-e-desc">Configura le entità da monitorare. Sulla card vengono mostrati soltanto gli stati attivi; nel popup trovi i relativi dettagli.</div>'+
+        this._multi('lights','Luci',RS_DOMAINS.lights)+this._multi('climates','Termostati',RS_DOMAINS.climates)+
+        this._field('Allarme (facoltativo)','alarm_entity','alarm_control_panel.*')+
+        this._field('Stato lavatrice (facoltativo)','washer_entity','binary_sensor.*')+
+        this._field('Energia consumata nel mese (facoltativo)','energy_entity','sensor.*');
+    }
+    if(this._tab==='aspetto'){
+      const theme=`<select class="rs-e-input" data-field="theme_mode">${[['auto','Auto (Home Assistant)'],['light','Light Edera'],['dark','Dark Edera']].map(([v,label])=>`<option value="${v}" ${c.theme_mode===v?'selected':''}>${label}</option>`).join('')}</select>`;
+      body='<div class="rs-e-heading">Aspetto Edera</div><div class="rs-e-desc">Personalizza intestazione, tema e pulsante dei dettagli, seguendo il design delle altre card.</div>'+
+        `<div class="rs-e-field"><label>Intestazione superiore</label><input class="rs-e-input" type="text" data-field="eyebrow" maxlength="55" value="${rsEsc(c.eyebrow)}"/></div>`+
+        `<div class="rs-e-field"><label>Tema</label>${theme}</div>`+
+        this._check('show_details_button','Mostra “Dettagli e stato”');
+    }
+    if(this._tab==='avanzate'){
+      body='<div class="rs-e-heading">Avanzate</div><div class="rs-e-desc">La card è inizialmente in sola lettura. Attiva i comandi reali soltanto dopo aver verificato le entità e i permessi Home Assistant.</div>'+
+        this._check('controls_enabled','Abilita lo spegnimento di luci e riscaldamento','Richiede conferma prima dei comandi; allarme e lavatrice si gestiscono dall’interfaccia nativa.')+
+        `<div class="rs-e-field"><label>Valore che indica lavatrice attiva</label><input class="rs-e-input" type="text" data-field="washer_active_state" value="${rsEsc(c.washer_active_state)}"/></div>`;
+    }
+    this.shadowRoot.innerHTML=`<style>${RS_EDITOR_STYLE}</style><div class="rs-edit ${customElements.get('ha-selector')?'':'rs-e-no-native'}"><div class="rs-e-tabs">${tabs.map(([id,label])=>`<button type="button" class="rs-e-tab ${this._tab===id?'active':''}" data-tab="${id}" aria-pressed="${this._tab===id}">${label}</button>`).join('')}</div>${body}</div>`;
+    this._mountSelectors();
+  }
   _mountSelectors(){if(!customElements.get('ha-selector'))return;
     this.shadowRoot.querySelectorAll('[data-selector]').forEach(slot=>{
       const key=slot.dataset.selector;const selector=document.createElement('ha-selector');selector.hass=this._hass;
@@ -320,6 +357,8 @@ class RoomSelectorCardEditor extends HTMLElement {
     });
   }
   _click(e){const b=e.target.closest('button');if(!b)return;
+    if(b.dataset.tab){this._tab=b.dataset.tab;this._render();return;}
+    if(b.dataset.clear){this._update({[b.dataset.clear]:''});return;}
     if(b.dataset.remove){this._update({[b.dataset.remove]:this._config[b.dataset.remove].filter(id=>id!==b.dataset.id)});return;}
   }
   _change(e){const input=e.target;const key=input.dataset.field;
@@ -327,7 +366,7 @@ class RoomSelectorCardEditor extends HTMLElement {
     if(!key)return;
     if(key==='controls_enabled'||key==='show_details_button'){this._update({[key]:input.checked});return;}
     if(key==='theme_mode'){this._update({theme_mode:input.value});return;}
-    if(key==='washer_active_state'){this._update({washer_active_state:input.value});return;}
+    if(key==='washer_active_state'||key==='eyebrow'){this._update({[key]:input.value});return;}
     if(key==='lights'||key==='climates'){
       const value=rsEntity(input.value,RS_DOMAINS[key]);if(value&&!this._config[key].includes(value))this._update({[key]:[...this._config[key],value]});return;
     }
