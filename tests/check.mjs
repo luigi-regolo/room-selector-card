@@ -39,7 +39,9 @@ hass.themes={darkMode:true};card._sig='';card.hass=hass;
 assert.ok(card.shadowRoot.innerHTML.includes('class="rs-card rs-dark"'),'auto theme uses dark palette');
 hass.themes={darkMode:false};card._sig='';card.hass=hass;
 assert.ok(card.shadowRoot.innerHTML.includes('class="rs-card rs-light"'),'auto theme uses light palette');
-assert.ok(card.shadowRoot.innerHTML.includes('1 luce accesa'));
+assert.ok(!card.shadowRoot.innerHTML.includes('1 luce accesa'),'Luci removed from card');
+assert.ok(card.shadowRoot.innerHTML.includes('Allarme disinserito'));
+assert.ok(card.shadowRoot.innerHTML.includes('Serratura da configurare'));
 assert.ok(card.shadowRoot.innerHTML.includes('1 termosifone attivo'));
 assert.ok(!card.shadowRoot.innerHTML.includes('Lavatrice attiva'));
 assert.ok(!card.shadowRoot.innerHTML.includes('Allarme da'));
@@ -122,5 +124,44 @@ homeCard.hass={states:{}};
 assert.match(homeCard.shadowRoot.innerHTML,/Allarme da configurare/);
 assert.match(homeCard.shadowRoot.innerHTML,/Serratura da configurare/);
 assert.doesNotMatch(homeCard.shadowRoot.innerHTML,/Asciugatrice attiva/);
+
+
+assert.match(source,/\.rs-dialog-top strong\{[^}]*font-size:17px/);
+assert.match(source,/env\(safe-area-inset-top\)/);
+assert.match(source,/max-height:min\(90dvh,720px\)/);
+assert.match(source,/\.rs-details\{[^}]*padding:5px 9px/);
+assert.match(source,/\.rs-details\{[^}]*margin:12px 0 0/);
+assert.match(source,/\.rs-details ha-icon\{[^}]*width:14px/);
+assert.doesNotMatch(source,/this\._multi\('lights','Luci'/);
+const detailCard=new Card();
+detailCard.setConfig({alarms:['alarm_control_panel.house'],lock_entity:'lock.front',lights:['light.legacy'],climates:['climate.heating'],cooling_climates:['climate.cooling'],washers:['binary_sensor.washer'],dryers:['binary_sensor.dryer'],energy_entity:'sensor.month_energy',custom_indicators:[{name:'Deumidificatori',icon:'mdi:water',active_state:'on',entities:['switch.dehumidifier']}]});
+detailCard.hass={states:{
+ 'alarm_control_panel.house':{state:'disarmed',attributes:{}},
+ 'lock.front':{state:'locked',attributes:{}},
+ 'light.legacy':{state:'on',attributes:{}},
+ 'climate.heating':{state:'heat',attributes:{hvac_action:'heating'}},
+ 'climate.cooling':{state:'cool',attributes:{hvac_action:'cooling'}},
+ 'binary_sensor.washer':{state:'off',attributes:{}},
+ 'binary_sensor.dryer':{state:'on',attributes:{}},
+ 'sensor.month_energy':{state:'9.4264',attributes:{unit_of_measurement:'kWh'}},
+ 'switch.dehumidifier':{state:'on',attributes:{}}
+}};
+assert.doesNotMatch(detailCard.shadowRoot.innerHTML,/luce accesa|luci accese/);
+assert.match(detailCard.shadowRoot.innerHTML,/data-act="details"><ha-icon icon="mdi:information-outline"><\/ha-icon> Dettagli e stato<\/button>/);
+const popupRoot={innerHTML:'',querySelector(){return null;},querySelectorAll(){return []}};
+detailCard._overlay={shadowRoot:popupRoot};detailCard._overlayMode='details';detailCard._renderOverlay();
+const popup=popupRoot.innerHTML;
+assert.match(popup,/<strong>Dettagli e stato<\/strong>/);
+assert.doesNotMatch(popup,/DETTAGLI AMBIENTE|STATO GENERALE DELLA CASA|rs-popup-title|rs-big-icon|class="rs-row-title">Luci<\/div>/);
+assert.equal((popup.match(/>Gestisci<\/button>/g)||[]).length,2);
+assert.equal((popup.match(/data-more=/g)||[]).length,2);
+const ordering=['Allarme','Serratura','Termosifoni','Climatizzazione','Lavatrice','Asciugatrice','Energia del mese','Deumidificatori'];
+let preceding=-1;
+for(const label of ordering){
+ const index=popup.indexOf('class="rs-row-title">'+label+'</div>');
+ assert.ok(index>preceding,'Correct order '+label);
+ preceding=index;
+}
+assert.doesNotMatch(popup,/data-action="(?:lights-off|climates-off)"/);
 
 console.log('OK — legacy compatibility, multi-entity helpers, native-safe icons, alarm timing, conditional display, explicit controls.');

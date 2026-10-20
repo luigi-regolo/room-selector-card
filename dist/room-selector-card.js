@@ -142,25 +142,25 @@ const RS_STYLE = `
 .rs-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px}
 .rs-chip{border:1px solid var(--rs-line);background:var(--rs-surface);color:var(--rs-text);border-radius:14px;padding:9px 11px;min-height:40px;display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600;max-width:100%;white-space:normal;text-align:left}
 .rs-chip ha-icon{--mdc-icon-size:18px;flex:none}.rs-chip.light ha-icon{color:#e4b24d}.rs-chip.climate ha-icon{color:#eb9654}.rs-chip.alarm ha-icon{color:#0b9b77}.rs-chip.alarm-critical ha-icon{color:#db6867}.rs-chip.washer ha-icon{color:#87a7ba}.rs-chip.dryer ha-icon{color:#87a7ba}.rs-chip.cooling ha-icon{color:#7caadd}.rs-chip.alarm-off ha-icon,.rs-chip.lock-unknown ha-icon{color:var(--rs-muted)}.rs-chip.lock-locked ha-icon{color:#0b9b77}.rs-chip.lock-unlocked ha-icon,.rs-chip.lock-moving ha-icon{color:#dcaa55}.rs-chip.lock-critical ha-icon{color:#db6867}.rs-chip.custom ha-icon{color:var(--rs-green)}
-.rs-bottom{margin-top:14px;display:flex;justify-content:flex-start}.rs-details{border:0;background:var(--rs-green);color:#fff;font-size:11px;font-weight:650;border-radius:999px;padding:7px 11px;display:inline-flex;align-items:center;gap:6px;min-height:30px;line-height:1.2}
-.rs-details ha-icon{--mdc-icon-size:14px}.rs-notice{font-size:12px;color:var(--rs-muted);margin:13px 4px 0;line-height:1.45}.rs-error{font-size:12px;color:var(--error-color,#d86d60);margin-top:10px;overflow-wrap:anywhere}
-@container(max-width:360px){.rs-card{padding:13px;border-radius:23px}.rs-title{font-size:23px}.rs-chips{gap:6px;margin-top:12px}.rs-chip{font-size:11px;padding:7px 9px;min-height:36px}.rs-toggle{min-width:38px;width:38px;height:38px}.rs-bottom{margin-top:12px}}
+.rs-bottom{display:flex;justify-content:flex-start}.rs-details{display:inline-flex;align-items:center;justify-content:center;vertical-align:top;gap:5px;border:0;border-radius:999px;color:#fff;background:var(--rs-green);padding:5px 9px;margin:12px 0 0;font-family:inherit;font-size:11px;font-weight:650;line-height:1.2;cursor:pointer;white-space:nowrap}
+.rs-details ha-icon{display:block;flex:none;margin:0;--mdc-icon-size:14px;width:14px;height:14px;color:inherit}.rs-notice{font-size:12px;color:var(--rs-muted);margin:13px 4px 0;line-height:1.45}.rs-error{font-size:12px;color:var(--error-color,#d86d60);margin-top:10px;overflow-wrap:anywhere}
+@container(max-width:360px){.rs-card{padding:13px;border-radius:23px}.rs-title{font-size:23px}.rs-chips{gap:6px;margin-top:12px}.rs-chip{font-size:11px;padding:7px 9px;min-height:36px}.rs-toggle{min-width:38px;width:38px;height:38px}}
 @media(prefers-reduced-motion:reduce){.rs-toggle,.rs-chip,.rs-details{transition:none!important}}
 `;
 const RS_OVERLAY_STYLE = `
 :host{font-family:var(--ha-font-family-body,var(--paper-font-body1_-_font-family,Roboto,Arial,sans-serif));font-size:14px}
 *,*:before,*:after{box-sizing:border-box}button{font:inherit;cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}
-.rs-layer{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;background:#0009;overscroll-behavior:contain;pointer-events:auto}
+.rs-layer{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));box-sizing:border-box;background:#0009;overscroll-behavior:contain;pointer-events:auto}
 .rs-layer.menu-layer{background:transparent;pointer-events:auto;align-items:initial;justify-content:initial;padding:0}
 .rs-panel,.rs-menu{--rs-green:#0a7156;--rs-bg:#fafbf9;--rs-text:#18221c;--rs-muted:#56675c;--rs-surface:#f0f2ef;--rs-circle:#fff;--rs-line:#e0e5df;background:var(--rs-bg);color:var(--rs-text);border:1px solid var(--rs-line);border-radius:26px;box-shadow:0 18px 60px #0005;min-width:0}
 .rs-panel.rs-dark,.rs-menu.rs-dark{--rs-green:#0e795d;--rs-bg:#101211;--rs-text:#f5f7f4;--rs-muted:#bbc5bd;--rs-surface:#191c1a;--rs-circle:#282b29;--rs-line:#2b302c}
 .rs-panel.rs-light,.rs-menu.rs-light{--rs-green:#0a7156;--rs-bg:#fafbf9;--rs-text:#18221c;--rs-muted:#56675c;--rs-surface:#f0f2ef;--rs-circle:#fff;--rs-line:#e0e5df}
-.rs-panel{width:min(390px,100%);max-height:min(90dvh,720px);display:flex;flex-direction:column;overflow:hidden;padding:18px}
-.rs-dialog-top{display:flex;align-items:center;gap:10px;min-height:38px;margin:0 0 12px;background:var(--rs-bg);flex:none}
+.rs-panel{width:min(390px,100%);max-height:min(90vh,720px);max-height:min(90dvh,720px);display:flex;flex-direction:column;overflow:hidden;padding:20px}
+.rs-dialog-top{display:flex;align-items:center;gap:10px;min-height:38px;margin:0 0 12px;background:var(--rs-bg);flex:none}.rs-dialog-top strong{flex:1;min-width:0;font-size:17px;font-weight:600;line-height:1.3;overflow-wrap:anywhere}
 .rs-big-icon{width:39px;height:39px;flex:none;border-radius:50%;background:var(--rs-circle);color:var(--rs-text);display:grid;place-items:center}.rs-big-icon ha-icon{--mdc-icon-size:21px}
 .rs-popup-titles{flex:1;min-width:0}.rs-eyebrow{letter-spacing:1.5px;font-size:10px;color:var(--rs-muted);font-weight:750;margin-bottom:4px}.rs-popup-title{font-weight:650;font-size:19px;line-height:1.2;overflow-wrap:anywhere}.rs-dot{color:var(--rs-green)}
 .rs-x{width:36px;height:36px;flex:none;display:grid;place-items:center;border-radius:50%;background:var(--rs-surface);border:0;color:var(--rs-text);padding:0}.rs-x ha-icon{--mdc-icon-size:18px}
-.rs-dialog-body{padding:0 2px 2px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;min-height:0;scrollbar-gutter:stable}
+.rs-dialog-body{padding:0 2px 2px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;min-height:0;-webkit-overflow-scrolling:touch;scrollbar-gutter:stable}
 .rs-row{display:flex;align-items:center;gap:10px;background:var(--rs-surface);border:1px solid var(--rs-line);padding:11px 12px;border-radius:14px;min-width:0;margin:0 0 9px;min-height:66px}
 .rs-row-icon{width:38px;height:38px;display:grid;place-items:center;flex:none;border-radius:50%;color:var(--rs-text);background:var(--rs-circle)}.rs-row-icon ha-icon{--mdc-icon-size:20px}.rs-custom-items{margin:0 0 12px 14px;padding-left:10px;border-left:2px solid var(--rs-line)}.rs-custom-item{display:flex;align-items:center;gap:9px;padding:7px 0;font-size:12px}.rs-custom-item span{flex:1;overflow-wrap:anywhere}.rs-custom-item button{font:inherit;font-size:12px;padding:6px 9px;border:1px solid var(--rs-line);border-radius:9px;background:var(--rs-surface);color:var(--rs-text);cursor:pointer}
 .rs-row-txt{flex:1;min-width:0}.rs-row-title{font-size:13px;font-weight:650}.rs-row-desc{font-size:12px;color:var(--rs-muted);margin-top:3px;overflow-wrap:anywhere}.rs-row button{border:1px solid var(--rs-line);border-radius:999px;color:var(--rs-text);background:var(--rs-circle);padding:8px 10px;font-size:11px;min-height:32px;white-space:nowrap;flex:none}
@@ -252,11 +252,10 @@ class RoomSelectorCard extends HTMLElement {
     const sign=this._signature();if(sign===this._sig)return;this._sig=sign;
 
   const a=this._active(),chips=[this._alarmInfo(),this._lockInfo()];
-  if(a.lights.length)chips.push({kind:'light',icon:'mdi:lightbulb-on-outline',label:`${a.lights.length} ${a.lights.length===1?'luce accesa':'luci accese'}`});
   if(a.climates.length)chips.push({kind:'climate',icon:'mdi:radiator',label:`${a.climates.length} ${a.climates.length===1?'termosifone attivo':'termosifoni attivi'}`});
+  if(a.cooling.length)chips.push({kind:'cooling',icon:'mdi:air-conditioner',label:a.cooling.length===1?'Climatizzatore attivo':`${a.cooling.length} climatizzatori attivi`});
   if(a.washers.length)chips.push({kind:'washer',icon:'mdi:washing-machine',label:a.washers.length===1?'Lavatrice attiva':`${a.washers.length} lavatrici attive`});
   if(a.dryers.length)chips.push({kind:'dryer',icon:'mdi:tumble-dryer',label:a.dryers.length===1?'Asciugatrice attiva':`${a.dryers.length} asciugatrici attive`});
-  if(a.cooling.length)chips.push({kind:'cooling',icon:'mdi:air-conditioner',label:a.cooling.length===1?'Climatizzatore attivo':`${a.cooling.length} climatizzatori attivi`});
   for(const group of a.custom){
     if(group.active.length)chips.push({kind:'custom',icon:group.indicator.icon,label:group.active.length===1?group.indicator.name:`${group.indicator.name} · ${group.active.length} attivi`});
   }
@@ -266,7 +265,7 @@ class RoomSelectorCard extends HTMLElement {
       <div class="rs-header"><div class="rs-headtext"><p class="rs-eyebrow">${rsEsc(this._config.eyebrow)}</p><h2 class="rs-title">${rsEsc(room||'Seleziona ambiente')}<span class="rs-dot">.</span></h2></div>
       <button type="button" class="rs-toggle" data-act="menu" aria-label="Apri selettore ambienti" aria-expanded="${this._overlayMode==='menu'}" ${!this._options().length?'disabled':''}><ha-icon icon="mdi:chevron-down"></ha-icon></button></div>
       <div class="rs-chips">${chips.map(v=>`<button type="button" class="rs-chip ${v.kind}" data-act="details" aria-label="Dettagli: ${rsEsc(v.label)}"><ha-icon icon="${v.icon}"></ha-icon>${rsEsc(v.label)}</button>`).join('')}</div>
-      ${this._config.show_details_button?`<div class="rs-bottom"><button type="button" class="rs-details" data-act="details">Dettagli e stato <ha-icon icon="mdi:arrow-right"></ha-icon></button></div>`:''}
+      ${this._config.show_details_button?`<div class="rs-bottom"><button type="button" class="rs-details" data-act="details"><ha-icon icon="mdi:information-outline"></ha-icon> Dettagli e stato</button></div>`:''}
       ${missing?'<div class="rs-notice">Seleziona un’entità input_select o select nell’editor visuale.</div>':''}
       ${this._error?`<div class="rs-error" role="alert">${rsEsc(this._error)}</div>`:''}
     </div>`;
@@ -333,25 +332,28 @@ class RoomSelectorCard extends HTMLElement {
  }
  const lock=this._lockInfo();
  rows.push(this._detailRow('Serratura',lock.label,lock.icon,c.lock_entity));
- if(c.lights.length)rows.push(this._detailRow('Luci',`${a.lights.length} di ${c.lights.length} accese`,'mdi:lightbulb-on-outline','',a.lights.length&&c.controls_enabled?'lights-off':''));
  if(c.climates.length){
-   const canStop=a.climates.length>0&&a.climates.every(id=>this._state(id)?.attributes?.hvac_modes?.includes('off'));
    const time=a.climates.length?this._timeValue(c.heating_time_entity):'';
-   rows.push(this._detailRow('Termosifoni',`${a.climates.length} di ${c.climates.length} attivi${time?' · Tempo: '+time:''}`,'mdi:radiator','',canStop&&c.controls_enabled?'climates-off':''));
- }
- for(const id of c.washers){
-   const e=this._state(id),active=a.washers.includes(id),time=active?this._timeValue(c.washer_time_entity):'';
-   rows.push(this._detailRow(c.washers.length>1?(e?.attributes?.friendly_name||id):'Lavatrice',
-     !rsKnown(e)?'Stato non disponibile':active?`In funzione${time?' · Tempo: '+time:''}`:'Spenta','mdi:washing-machine',id));
- }
- for(const id of c.dryers){
-   const e=this._state(id),active=a.dryers.includes(id),time=active?this._timeValue(c.dryer_time_entity):'';
-   rows.push(this._detailRow(c.dryers.length>1?(e?.attributes?.friendly_name||id):'Asciugatrice',
-     !rsKnown(e)?'Stato non disponibile':active?`In funzione${time?' · Tempo: '+time:''}`:'Spenta','mdi:tumble-dryer',id));
+   rows.push(this._detailRow('Termosifoni',`${a.climates.length} di ${c.climates.length} attivi${time?' · Tempo: '+time:''}`,'mdi:radiator'));
  }
  if(c.cooling_climates.length){
    const time=a.cooling.length?this._timeValue(c.cooling_time_entity):'';
    rows.push(this._detailRow('Climatizzazione',`${a.cooling.length} di ${c.cooling_climates.length} attivi${time?' · Tempo: '+time:''}`,'mdi:air-conditioner'));
+ }
+ for(const id of c.washers){
+   const e=this._state(id),active=a.washers.includes(id),time=active?this._timeValue(c.washer_time_entity):'';
+   rows.push(this._detailRow(c.washers.length>1?(e?.attributes?.friendly_name||id):'Lavatrice',
+     !rsKnown(e)?'Stato non disponibile':active?`In funzione${time?' · Tempo: '+time:''}`:'Spenta','mdi:washing-machine'));
+ }
+ for(const id of c.dryers){
+   const e=this._state(id),active=a.dryers.includes(id),time=active?this._timeValue(c.dryer_time_entity):'';
+   rows.push(this._detailRow(c.dryers.length>1?(e?.attributes?.friendly_name||id):'Asciugatrice',
+     !rsKnown(e)?'Stato non disponibile':active?`In funzione${time?' · Tempo: '+time:''}`:'Spenta','mdi:tumble-dryer'));
+ }
+ const energy=this._state(c.energy_entity);
+ if(c.energy_entity){
+   const amount=rsKnown(energy)&&Number.isFinite(Number(energy.state))?`${new Intl.NumberFormat('it-IT',{maximumFractionDigits:2}).format(Number(energy.state))} ${rsText(energy.attributes?.unit_of_measurement||'',20)}`.trim():'Dato non disponibile';
+   rows.push(this._detailRow('Energia del mese',amount,'mdi:lightning-bolt'));
  }
  for(const group of a.custom){
    const ci=group.indicator;
@@ -360,19 +362,14 @@ class RoomSelectorCard extends HTMLElement {
      const list=ci.entities.map(id=>{
        const state=this._state(id),label=state?.attributes?.friendly_name||id;
        const summary=rsKnown(state)?state.state:'Non disponibile';
-       return `<div class="rs-custom-item"><span>${rsEsc(label)} · ${rsEsc(summary)}</span><button type="button" data-more="${rsEsc(id)}">Gestisci</button></div>`;
+       return `<div class="rs-custom-item"><span>${rsEsc(label)} · ${rsEsc(summary)}</span></div>`;
      }).join('');
      rows.push(`<div class="rs-custom-items" aria-label="Entità ${rsEsc(ci.name)}">${list}</div>`);
    }
  }
- const energy=this._state(c.energy_entity);
- if(c.energy_entity){
-   const amount=rsKnown(energy)&&Number.isFinite(Number(energy.state))?`${new Intl.NumberFormat('it-IT',{maximumFractionDigits:2}).format(Number(energy.state))} ${rsText(energy.attributes?.unit_of_measurement||'',20)}`.trim():'Dato non disponibile';
-   rows.push(this._detailRow('Energia del mese',amount,'mdi:lightning-bolt',c.energy_entity));
- }
  const names={'lights-off':'Spegnere tutte le luci accese configurate?','climates-off':'Disattivare il riscaldamento per tutti i termostati attivi configurati?'};
  root.innerHTML=`<style>${RS_OVERLAY_STYLE}</style><div class="rs-layer" data-backdrop="true"><section class="rs-panel ${palette}" role="dialog" aria-modal="true" aria-label="Dettagli e stato">
-   <div class="rs-dialog-top"><div class="rs-big-icon"><ha-icon icon="mdi:home-outline"></ha-icon></div><div class="rs-popup-titles"><div class="rs-eyebrow">STATO GENERALE DELLA CASA</div><div class="rs-popup-title">Dettagli e stato<span class="rs-dot">.</span></div></div><button type="button" class="rs-x" data-close="true" aria-label="Chiudi dettagli" data-focus="true"><ha-icon icon="mdi:close"></ha-icon></button></div>
+   <div class="rs-dialog-top"><strong>Dettagli e stato</strong><button type="button" class="rs-x" data-close="true" aria-label="Chiudi dettagli" data-focus="true"><ha-icon icon="mdi:close"></ha-icon></button></div>
    <div class="rs-dialog-body">${this._confirm?`<div class="rs-confirm"><p>${rsEsc(names[this._confirm]||'Confermare?')}</p><div class="rs-confirm-actions"><button data-cancel="true">Annulla</button><button class="primary" data-execute="${this._confirm}" ${this._busy?'disabled':''}>Conferma</button></div></div>`:''}
    ${rows.join('')||'<div class="rs-help">Nessun indicatore configurato.</div>'}
    ${this._error?`<p class="rs-help" role="alert">${rsEsc(this._error)}</p>`:''}</div></section></div>`;
@@ -497,7 +494,6 @@ class RoomSelectorCardEditor extends HTMLElement {
       body='<div class="rs-e-heading">Stato generale della casa</div><div class="rs-e-desc">Allarme e serratura sono sempre visibili sulla card; gli altri indicatori compaiono soltanto quando attivi. I dati sono indipendenti dall’ambiente selezionato.</div>'+
         this._multi('alarms','Allarmi',RS_DOMAINS.alarms)+
         this._field('Serratura della porta','lock_entity','lock.*')+
-        this._multi('lights','Luci',RS_DOMAINS.lights)+
         this._multi('climates','Termosifoni / valvole',RS_DOMAINS.climates)+
         this._multi('washers','Lavatrice (stato)',RS_DOMAINS.washers)+
         this._multi('dryers','Asciugatrice (stato)',RS_DOMAINS.dryers)+
@@ -520,8 +516,7 @@ class RoomSelectorCardEditor extends HTMLElement {
         this._check('show_details_button','Mostra “Dettagli e stato”');
     }
     if(this._tab==='avanzate'){
-      body='<div class="rs-e-heading">Avanzate</div><div class="rs-e-desc">La card è inizialmente in sola lettura. Attiva i comandi reali soltanto dopo aver verificato le entità e i permessi Home Assistant.</div>'+
-        this._check('controls_enabled','Abilita lo spegnimento di luci e riscaldamento','Richiede conferma prima dei comandi; allarme e lavatrice si gestiscono dall’interfaccia nativa.')+
+      body='<div class="rs-e-heading">Avanzate</div><div class="rs-e-desc">Gli indicatori sono informativi. I controlli di allarme e serratura si aprono con Home Assistant.</div>'+
         `<div class="rs-e-field"><label>Valore che indica lavatrice attiva</label><input class="rs-e-input" type="text" data-field="washer_active_state" value="${rsEsc(c.washer_active_state)}"/></div>`+
         `<div class="rs-e-field"><label>Valore che indica asciugatrice attiva</label><input class="rs-e-input" type="text" data-field="dryer_active_state" value="${rsEsc(c.dryer_active_state)}"/></div>`;
     }
