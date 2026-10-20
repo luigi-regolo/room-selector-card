@@ -17,7 +17,10 @@ const RS_DEFAULTS = Object.freeze({
   alarm_entity: '', // Legacy configuration supported
   alarms: [],
   washer_entity: '', // Legacy configuration supported
-  washers: [],
+  washers: [], dryers: [], dryer_active_state: 'on',
+  cooling_climates: [], lock_entity: '',
+  alarm_time_entity: '', washer_time_entity: '', dryer_time_entity: '',
+  heating_time_entity: '', cooling_time_entity: '',
   custom_indicators: [],
   washer_active_state: 'on',
   energy_entity: '',
@@ -32,6 +35,11 @@ const RS_DOMAINS = Object.freeze({
   alarms: ['alarm_control_panel'],
   washer_entity: ['binary_sensor', 'sensor', 'switch', 'input_boolean'],
   washers: ['binary_sensor', 'sensor', 'switch', 'input_boolean'],
+  dryers: ['binary_sensor', 'sensor', 'switch', 'input_boolean'],
+  cooling_climates: ['climate'], lock_entity: ['lock'],
+  alarm_time_entity: ['sensor'], washer_time_entity: ['sensor'],
+  dryer_time_entity: ['sensor'], heating_time_entity: ['sensor'],
+  cooling_time_entity: ['sensor'],
   custom_entities: ['input_boolean', 'binary_sensor', 'sensor', 'light', 'switch', 'fan', 'climate', 'cover', 'alarm_control_panel'],
   energy_entity: ['sensor']
 });
@@ -84,6 +92,15 @@ function rsConfig(raw={}) {
     alarms:rsArray(Array.isArray(r.alarms)?r.alarms:(r.alarm_entity?[r.alarm_entity]:[]),RS_DOMAINS.alarms),
     washer_entity:rsEntity(r.washer_entity,RS_DOMAINS.washer_entity),
     washers:rsArray(Array.isArray(r.washers)?r.washers:(r.washer_entity?[r.washer_entity]:[]),RS_DOMAINS.washers),
+    dryers:rsArray(r.dryers,RS_DOMAINS.dryers),
+    dryer_active_state:rsText(r.dryer_active_state??'on',40)||'on',
+    cooling_climates:rsArray(r.cooling_climates,RS_DOMAINS.cooling_climates),
+    lock_entity:rsEntity(r.lock_entity,RS_DOMAINS.lock_entity),
+    alarm_time_entity:rsEntity(r.alarm_time_entity,RS_DOMAINS.alarm_time_entity),
+    washer_time_entity:rsEntity(r.washer_time_entity,RS_DOMAINS.washer_time_entity),
+    dryer_time_entity:rsEntity(r.dryer_time_entity,RS_DOMAINS.dryer_time_entity),
+    heating_time_entity:rsEntity(r.heating_time_entity,RS_DOMAINS.heating_time_entity),
+    cooling_time_entity:rsEntity(r.cooling_time_entity,RS_DOMAINS.cooling_time_entity),
     custom_indicators:Array.isArray(r.custom_indicators)?r.custom_indicators.slice(0,16).map(rsCustom):[],
     washer_active_state:rsText(r.washer_active_state ?? 'on',40) || 'on',
     energy_entity:rsEntity(r.energy_entity,RS_DOMAINS.energy_entity),
@@ -124,7 +141,7 @@ const RS_STYLE = `
 .rs-toggle:focus-visible,.rs-chip:focus-visible,.rs-details:focus-visible{outline:2px solid var(--rs-green);outline-offset:3px}
 .rs-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px}
 .rs-chip{border:1px solid var(--rs-line);background:var(--rs-surface);color:var(--rs-text);border-radius:14px;padding:9px 11px;min-height:40px;display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600;max-width:100%;white-space:normal;text-align:left}
-.rs-chip ha-icon{--mdc-icon-size:18px;flex:none}.rs-chip.light ha-icon{color:#e4b24d}.rs-chip.climate ha-icon{color:#eb9654}.rs-chip.alarm ha-icon{color:#0b9b77}.rs-chip.alarm-critical ha-icon{color:#db6867}.rs-chip.washer ha-icon{color:#87a7ba}.rs-chip.custom ha-icon{color:var(--rs-green)}
+.rs-chip ha-icon{--mdc-icon-size:18px;flex:none}.rs-chip.light ha-icon{color:#e4b24d}.rs-chip.climate ha-icon{color:#eb9654}.rs-chip.alarm ha-icon{color:#0b9b77}.rs-chip.alarm-critical ha-icon{color:#db6867}.rs-chip.washer ha-icon{color:#87a7ba}.rs-chip.dryer ha-icon{color:#87a7ba}.rs-chip.cooling ha-icon{color:#7caadd}.rs-chip.alarm-off ha-icon,.rs-chip.lock-unknown ha-icon{color:var(--rs-muted)}.rs-chip.lock-locked ha-icon{color:#0b9b77}.rs-chip.lock-unlocked ha-icon,.rs-chip.lock-moving ha-icon{color:#dcaa55}.rs-chip.lock-critical ha-icon{color:#db6867}.rs-chip.custom ha-icon{color:var(--rs-green)}
 .rs-bottom{margin-top:14px;display:flex;justify-content:flex-start}.rs-details{border:0;background:var(--rs-green);color:#fff;font-size:11px;font-weight:650;border-radius:999px;padding:7px 11px;display:inline-flex;align-items:center;gap:6px;min-height:30px;line-height:1.2}
 .rs-details ha-icon{--mdc-icon-size:14px}.rs-notice{font-size:12px;color:var(--rs-muted);margin:13px 4px 0;line-height:1.45}.rs-error{font-size:12px;color:var(--error-color,#d86d60);margin-top:10px;overflow-wrap:anywhere}
 @container(max-width:360px){.rs-card{padding:13px;border-radius:23px}.rs-title{font-size:23px}.rs-chips{gap:6px;margin-top:12px}.rs-chip{font-size:11px;padding:7px 9px;min-height:36px}.rs-toggle{min-width:38px;width:38px;height:38px}.rs-bottom{margin-top:12px}}
@@ -175,14 +192,38 @@ class RoomSelectorCard extends HTMLElement {
   _current(){const state=this._state(this._config.selection_entity);return rsKnown(state)?state.state:'';}
   _roomIcon(room){return this._config.room_icons[room]||rsDefaultIcon(room);}
   _active(){
-    const c=this._config;
-    const lights=c.lights.filter(id=>this._state(id)?.state==='on');
-    const climates=c.climates.filter(id=>this._state(id)?.attributes?.hvac_action==='heating');
-    const alarms=c.alarms.filter(id=>{const a=this._state(id);return rsKnown(a)&&(RS_ARMED.has(a.state)||RS_ALARM_ATTENTION.has(a.state));});
-    const washers=c.washers.filter(id=>{const a=this._state(id);return rsKnown(a)&&a.state===c.washer_active_state;});
-    const custom=c.custom_indicators.map((indicator,index)=>({index,indicator,active:indicator.entities.filter(id=>rsIsCustomActive(this._state(id),indicator))}));
-    return {lights,climates,alarms,washers,custom};
-  }
+ const c=this._config;
+ const lights=c.lights.filter(id=>this._state(id)?.state==='on');
+ const climates=c.climates.filter(id=>this._state(id)?.attributes?.hvac_action==='heating');
+ const alarms=c.alarms.filter(id=>{const a=this._state(id);return rsKnown(a)&&(RS_ARMED.has(a.state)||RS_ALARM_ATTENTION.has(a.state));});
+ const washers=c.washers.filter(id=>{const a=this._state(id);return rsKnown(a)&&a.state===c.washer_active_state;});
+ const dryers=c.dryers.filter(id=>{const a=this._state(id);return rsKnown(a)&&a.state===c.dryer_active_state;});
+ const cooling=c.cooling_climates.filter(id=>this._state(id)?.attributes?.hvac_action==='cooling');
+ const custom=c.custom_indicators.map((indicator,index)=>({index,indicator,active:indicator.entities.filter(id=>rsIsCustomActive(this._state(id),indicator))}));
+ return {lights,climates,alarms,washers,dryers,cooling,custom};
+}
+  _timeValue(id){const e=this._state(id);if(!rsKnown(e))return '';const value=rsText(e.state,80),unit=rsText(e.attributes?.unit_of_measurement||'',18);return value+(unit&&!value.endsWith(unit)?' '+unit:'');}
+  _alarmInfo(){
+ const c=this._config,a=this._active();
+ if(!c.alarms.length)return {label:'Allarme da configurare',kind:'alarm-off',icon:'mdi:shield-outline'};
+ const rows=c.alarms.map(id=>this._state(id));
+ if(rows.some(e=>e?.state==='triggered'))return {label:'Allarme in corso',kind:'alarm-critical',icon:'mdi:shield-alert-outline'};
+ if(rows.some(e=>e?.state==='arming'||e?.state==='pending'))return {label:'Allarme in transizione',kind:'alarm-critical',icon:'mdi:shield-alert-outline'};
+ if(a.alarms.length)return {label:a.alarms.length===1?'Allarme inserito':a.alarms.length+' allarmi inseriti',kind:'alarm',icon:'mdi:shield-lock-outline'};
+ if(rows.every(e=>e?.state==='disarmed'))return {label:'Allarme disinserito',kind:'alarm-off',icon:'mdi:shield-off-outline'};
+ return {label:'Allarme non disponibile',kind:'alarm-off',icon:'mdi:shield-outline'};
+}
+  _lockInfo(){
+ const id=this._config.lock_entity,e=this._state(id);
+ if(!id)return {label:'Serratura da configurare',kind:'lock-unknown',icon:'mdi:lock-question'};
+ if(!rsKnown(e))return {label:'Serratura non disponibile',kind:'lock-unknown',icon:'mdi:lock-question'};
+ if(e.state==='locked')return {label:'Porta bloccata',kind:'lock-locked',icon:'mdi:lock-outline'};
+ if(e.state==='unlocked')return {label:'Porta sbloccata',kind:'lock-unlocked',icon:'mdi:lock-open-outline'};
+ if(e.state==='locking'||e.state==='unlocking')return {label:'Serratura in movimento',kind:'lock-moving',icon:'mdi:lock-clock'};
+ if(e.state==='jammed')return {label:'Serratura inceppata',kind:'lock-critical',icon:'mdi:lock-alert-outline'};
+ if(e.state==='open')return {label:'Porta aperta',kind:'lock-unlocked',icon:'mdi:door-open'};
+ return {label:'Stato serratura: '+rsText(e.state,30),kind:'lock-unknown',icon:'mdi:lock-question'};
+}
   _stopClock(){if(this._clockTimer!=null){window.clearInterval?.(this._clockTimer);this._clockTimer=null;}}
   _syncClock(){
     if(!this.isConnected)return;
@@ -199,7 +240,7 @@ class RoomSelectorCard extends HTMLElement {
   }
   _signature(){
     const c=this._config;
-    const ids=[c.selection_entity,...c.lights,...c.climates,...c.alarms,...c.washers,c.energy_entity,...c.custom_indicators.flatMap(x=>x.entities)];
+    const ids=[c.selection_entity,...c.lights,...c.climates,...c.cooling_climates,...c.alarms,...c.washers,...c.dryers,c.lock_entity,c.energy_entity,c.alarm_time_entity,c.washer_time_entity,c.dryer_time_entity,c.heating_time_entity,c.cooling_time_entity,...c.custom_indicators.flatMap(x=>x.entities)];
     const input=[...new Set(ids.filter(Boolean))].map(id=>{
       const o=this._state(id);
       return [id,o?.state,o?.last_changed,o?.attributes?.options,o?.attributes?.hvac_action,o?.attributes?.hvac_modes,o?.attributes?.unit_of_measurement];
@@ -209,26 +250,22 @@ class RoomSelectorCard extends HTMLElement {
   _render(){
     if(!this.isConnected)return;
     const sign=this._signature();if(sign===this._sig)return;this._sig=sign;
-    const a=this._active();const chips=[];
-    if(a.lights.length) chips.push({kind:'light',icon:'mdi:lightbulb-on-outline',label:`${a.lights.length} ${a.lights.length===1?'luce accesa':'luci accese'}`});
-    if(a.climates.length) chips.push({kind:'climate',icon:'mdi:radiator',label:`${a.climates.length} ${a.climates.length===1?'termosifone attivo':'termosifoni attivi'}`});
-    if(a.alarms.length){
-      const entities=a.alarms.map(id=>this._state(id));
-      const urgent=entities.some(x=>RS_ALARM_ATTENTION.has(x.state));
-      const first=entities[0];
-      const label=urgent?(entities.some(x=>x.state==='triggered')?'Allarme in corso':'Allarme in transizione'):
-        a.alarms.length===1?`Allarme ${rsDuration(first.last_changed)||'inserito'}`:`${a.alarms.length} allarmi inseriti`;
-      chips.push({kind:urgent?'alarm-critical':'alarm',icon:urgent?'mdi:shield-alert-outline':'mdi:shield-lock-outline',label});
-    }
-    if(a.washers.length)chips.push({kind:'washer',icon:'mdi:washing-machine',label:a.washers.length===1?'Lavatrice attiva':`${a.washers.length} dispositivi lavaggio attivi`});
-    for(const group of a.custom){
-      if(group.active.length)chips.push({kind:'custom',icon:group.indicator.icon,label:group.active.length===1?group.indicator.name:`${group.indicator.name} · ${group.active.length} attivi`});
-    }
+
+  const a=this._active(),chips=[this._alarmInfo(),this._lockInfo()];
+  if(a.lights.length)chips.push({kind:'light',icon:'mdi:lightbulb-on-outline',label:`${a.lights.length} ${a.lights.length===1?'luce accesa':'luci accese'}`});
+  if(a.climates.length)chips.push({kind:'climate',icon:'mdi:radiator',label:`${a.climates.length} ${a.climates.length===1?'termosifone attivo':'termosifoni attivi'}`});
+  if(a.washers.length)chips.push({kind:'washer',icon:'mdi:washing-machine',label:a.washers.length===1?'Lavatrice attiva':`${a.washers.length} lavatrici attive`});
+  if(a.dryers.length)chips.push({kind:'dryer',icon:'mdi:tumble-dryer',label:a.dryers.length===1?'Asciugatrice attiva':`${a.dryers.length} asciugatrici attive`});
+  if(a.cooling.length)chips.push({kind:'cooling',icon:'mdi:air-conditioner',label:a.cooling.length===1?'Climatizzatore attivo':`${a.cooling.length} climatizzatori attivi`});
+  for(const group of a.custom){
+    if(group.active.length)chips.push({kind:'custom',icon:group.indicator.icon,label:group.active.length===1?group.indicator.name:`${group.indicator.name} · ${group.active.length} attivi`});
+  }
+
     const room=this._current();const missing=!this._config.selection_entity || !this._state(this._config.selection_entity);
     this.shadowRoot.innerHTML=`<style>${RS_STYLE}</style><div class="rs-card ${this._palette()}">
       <div class="rs-header"><div class="rs-headtext"><p class="rs-eyebrow">${rsEsc(this._config.eyebrow)}</p><h2 class="rs-title">${rsEsc(room||'Seleziona ambiente')}<span class="rs-dot">.</span></h2></div>
       <button type="button" class="rs-toggle" data-act="menu" aria-label="Apri selettore ambienti" aria-expanded="${this._overlayMode==='menu'}" ${!this._options().length?'disabled':''}><ha-icon icon="mdi:chevron-down"></ha-icon></button></div>
-      ${chips.length?`<div class="rs-chips">${chips.map(v=>`<button type="button" class="rs-chip ${v.kind}" data-act="details" aria-label="Dettagli: ${rsEsc(v.label)}"><ha-icon icon="${v.icon}"></ha-icon>${rsEsc(v.label)}</button>`).join('')}</div>`:''}
+      <div class="rs-chips">${chips.map(v=>`<button type="button" class="rs-chip ${v.kind}" data-act="details" aria-label="Dettagli: ${rsEsc(v.label)}"><ha-icon icon="${v.icon}"></ha-icon>${rsEsc(v.label)}</button>`).join('')}</div>
       ${this._config.show_details_button?`<div class="rs-bottom"><button type="button" class="rs-details" data-act="details">Dettagli e stato <ha-icon icon="mdi:arrow-right"></ha-icon></button></div>`:''}
       ${missing?'<div class="rs-notice">Seleziona un’entità input_select o select nell’editor visuale.</div>':''}
       ${this._error?`<div class="rs-error" role="alert">${rsEsc(this._error)}</div>`:''}
@@ -264,65 +301,84 @@ class RoomSelectorCard extends HTMLElement {
       ${action?`<button type="button" data-action="${rsEsc(action)}">${action==='lights-off'||action==='climates-off'?'Spegni':'Gestisci'}</button>`:entity?`<button type="button" data-more="${rsEsc(entity)}">Gestisci</button>`:''}</div>`;
   }
   _renderOverlay(){
-    if(!this._overlay)return;
-    const root=this._overlay.shadowRoot;const palette=this._palette();const room=this._current();
-    const scrollTop=root.querySelector('.rs-dialog-body')?.scrollTop||0;
-    const oldFocus=root.activeElement;
-    const focusKey=oldFocus&&['data-more','data-close','data-cancel','data-execute','data-action'].find(key=>oldFocus.hasAttribute(key));
-    const focusValue=focusKey?oldFocus.getAttribute(focusKey):null;
-    if(this._overlayMode==='menu'){
-      const items=this._options();root.innerHTML=`<style>${RS_OVERLAY_STYLE}</style><div class="rs-layer menu-layer" data-backdrop="true" style="pointer-events:auto"><div class="rs-menu ${palette}" role="menu" aria-label="Ambienti">
-        ${items.map((name,i)=>`<button type="button" role="menuitemradio" aria-checked="${name===room}" aria-current="${name===room}" data-room="${rsEsc(name)}" ${i===0?'data-focus="true"':''}><ha-icon icon="${rsIcon(this._roomIcon(name))}"></ha-icon><span>${rsEsc(name)}</span>${name===room?'<ha-icon icon="mdi:check"></ha-icon>':''}</button>`).join('')}</div></div>`;
-      this._positionMenu();return;
-    }
-    const a=this._active(), c=this._config;const rows=[];
-    if(c.lights.length){rows.push(this._detailRow('Luci',`${a.lights.length} di ${c.lights.length} accese`,'mdi:lightbulb-on-outline','',a.lights.length&&c.controls_enabled?'lights-off':''));}
-    if(c.climates.length){
-      const canStop=a.climates.length>0 && a.climates.every(id=>this._state(id)?.attributes?.hvac_modes?.includes('off'));
-      rows.push(this._detailRow('Riscaldamento',`${a.climates.length} di ${c.climates.length} in riscaldamento`,'mdi:radiator','',canStop&&c.controls_enabled?'climates-off':''));
-    }
-    for(const id of c.alarms){
-      const alarm=this._state(id);
-      const text=!rsKnown(alarm)?'Stato non disponibile':alarm.state==='disarmed'?'Disinserito':
-        alarm.state==='triggered'?'Allarme in corso':RS_ARMED.has(alarm.state)?`Inserito ${rsDuration(alarm.last_changed)}`:
-        alarm.state==='arming'||alarm.state==='pending'?'Transizione in corso':`Stato: ${alarm.state}`;
-      rows.push(this._detailRow(c.alarms.length>1?(alarm?.attributes?.friendly_name||id):'Allarme',text,'mdi:shield-lock-outline',id));
-    }
-    for(const id of c.washers){
-      const washer=this._state(id);
-      const active=a.washers.includes(id);
-      rows.push(this._detailRow(c.washers.length>1?(washer?.attributes?.friendly_name||id):'Lavatrice',
-        !rsKnown(washer)?'Stato non disponibile':active?'In funzione':'Non in funzione','mdi:washing-machine',id));
-    }
-    for(const group of a.custom){
-      const ci=group.indicator;
-      rows.push(this._detailRow(ci.name,`${group.active.length} di ${ci.entities.length} attivi`,ci.icon));
-      if(ci.entities.length){
-        const list=ci.entities.map(id=>{
-          const state=this._state(id);
-          const label=state?.attributes?.friendly_name||id;
-          const summary=rsKnown(state)?state.state:'Non disponibile';
-          return `<div class="rs-custom-item"><span>${rsEsc(label)} · ${rsEsc(summary)}</span><button type="button" data-more="${rsEsc(id)}">Gestisci</button></div>`;
-        }).join('');
-        rows.push(`<div class="rs-custom-items" aria-label="Entità ${rsEsc(ci.name)}">${list}</div>`);
-      }
-    }
-    const energy=this._state(c.energy_entity);if(c.energy_entity){
-      const amount=rsKnown(energy)&&Number.isFinite(Number(energy.state))?`${new Intl.NumberFormat('it-IT',{maximumFractionDigits:2}).format(Number(energy.state))} ${rsText(energy.attributes?.unit_of_measurement||'',20)}`.trim():'Dato non disponibile';
-      rows.push(this._detailRow('Energia del mese',amount,'mdi:lightning-bolt',c.energy_entity));
-    }
-    const names={ 'lights-off':'Spegnere tutte le luci accese configurate?', 'climates-off':'Disattivare il riscaldamento per tutti i termostati attivi configurati?' };
-    root.innerHTML=`<style>${RS_OVERLAY_STYLE}</style><div class="rs-layer" data-backdrop="true"><section class="rs-panel ${palette}" role="dialog" aria-modal="true" aria-label="Dettagli e stato">
-      <div class="rs-dialog-top"><div class="rs-big-icon"><ha-icon icon="${rsIcon(this._roomIcon(room))}"></ha-icon></div><div class="rs-popup-titles"><div class="rs-eyebrow">DETTAGLI AMBIENTE</div><div class="rs-popup-title">${rsEsc(room||'Ambiente')}<span class="rs-dot">.</span></div></div><button type="button" class="rs-x" data-close="true" aria-label="Chiudi dettagli" data-focus="true"><ha-icon icon="mdi:close"></ha-icon></button></div>
-      <div class="rs-dialog-body">${this._confirm?`<div class="rs-confirm"><p>${rsEsc(names[this._confirm]||'Confermare?')}</p><div class="rs-confirm-actions"><button data-cancel="true">Annulla</button><button class="primary" data-execute="${this._confirm}" ${this._busy?'disabled':''}>Conferma</button></div></div>`:''}
-      ${rows.length?rows.join(''):'<div class="rs-help">Nessun indicatore configurato. Aggiungi le entità dall’editor visuale.</div>'}
-      ${this._error?`<p class="rs-help" role="alert">${rsEsc(this._error)}</p>`:''}</div></section></div>`;
-    const body=root.querySelector('.rs-dialog-body');if(body)body.scrollTop=scrollTop;
-    if(focusKey){
-      const next=[...root.querySelectorAll('button')].find(x=>x.getAttribute(focusKey)===focusValue);
-      next?.focus?.({preventScroll:true});
-    }
-  }
+ if(!this._overlay)return;
+ const root=this._overlay.shadowRoot,palette=this._palette(),room=this._current();
+ const scrollTop=root.querySelector('.rs-dialog-body')?.scrollTop||0;
+ const oldFocus=root.activeElement;
+ const focusKey=oldFocus&&['data-more','data-close','data-cancel','data-execute','data-action'].find(key=>oldFocus.hasAttribute(key));
+ const focusValue=focusKey?oldFocus.getAttribute(focusKey):null;
+ if(this._overlayMode==='menu'){
+   const items=this._options();
+   root.innerHTML=`<style>${RS_OVERLAY_STYLE}</style><div class="rs-layer menu-layer" data-backdrop="true" style="pointer-events:auto"><div class="rs-menu ${palette}" role="menu" aria-label="Ambienti">
+     ${items.map((name,i)=>`<button type="button" role="menuitemradio" aria-checked="${name===room}" aria-current="${name===room}" data-room="${rsEsc(name)}" ${i===0?'data-focus="true"':''}><ha-icon icon="${rsIcon(this._roomIcon(name))}"></ha-icon><span>${rsEsc(name)}</span>${name===room?'<ha-icon icon="mdi:check"></ha-icon>':''}</button>`).join('')}</div></div>`;
+   this._positionMenu();return;
+ }
+ const a=this._active(),c=this._config,rows=[];
+ for(const id of (c.alarms.length?c.alarms:[''])){
+   const e=this._state(id),available=rsKnown(e),armed=available&&RS_ARMED.has(e.state);
+   let state='Non configurato';
+   if(id){
+     if(!available)state='Stato non disponibile';
+     else if(e.state==='disarmed')state='Disinserito';
+     else if(e.state==='triggered')state='Allarme in corso';
+     else if(e.state==='arming'||e.state==='pending')state='Attivazione in corso';
+     else if(armed){
+       const modes={armed_away:'Fuori casa',armed_home:'In casa',armed_night:'Notte',armed_vacation:'Vacanza',armed_custom_bypass:'Personalizzato'};
+       const time=e.state==='armed_away'?this._timeValue(c.alarm_time_entity)||rsDuration(e.last_changed):rsDuration(e.last_changed);
+       state=`Inserito · ${modes[e.state]||'Attivo'}${time?' · '+time:''}`;
+     }else state='Stato: '+rsText(e.state,40);
+   }
+   rows.push(this._detailRow(c.alarms.length>1?(e?.attributes?.friendly_name||id):'Allarme',state,
+     !available?'mdi:shield-outline':e.state==='triggered'?'mdi:shield-alert-outline':armed?'mdi:shield-lock-outline':'mdi:shield-off-outline',id));
+ }
+ const lock=this._lockInfo();
+ rows.push(this._detailRow('Serratura',lock.label,lock.icon,c.lock_entity));
+ if(c.lights.length)rows.push(this._detailRow('Luci',`${a.lights.length} di ${c.lights.length} accese`,'mdi:lightbulb-on-outline','',a.lights.length&&c.controls_enabled?'lights-off':''));
+ if(c.climates.length){
+   const canStop=a.climates.length>0&&a.climates.every(id=>this._state(id)?.attributes?.hvac_modes?.includes('off'));
+   const time=a.climates.length?this._timeValue(c.heating_time_entity):'';
+   rows.push(this._detailRow('Termosifoni',`${a.climates.length} di ${c.climates.length} attivi${time?' · Tempo: '+time:''}`,'mdi:radiator','',canStop&&c.controls_enabled?'climates-off':''));
+ }
+ for(const id of c.washers){
+   const e=this._state(id),active=a.washers.includes(id),time=active?this._timeValue(c.washer_time_entity):'';
+   rows.push(this._detailRow(c.washers.length>1?(e?.attributes?.friendly_name||id):'Lavatrice',
+     !rsKnown(e)?'Stato non disponibile':active?`In funzione${time?' · Tempo: '+time:''}`:'Spenta','mdi:washing-machine',id));
+ }
+ for(const id of c.dryers){
+   const e=this._state(id),active=a.dryers.includes(id),time=active?this._timeValue(c.dryer_time_entity):'';
+   rows.push(this._detailRow(c.dryers.length>1?(e?.attributes?.friendly_name||id):'Asciugatrice',
+     !rsKnown(e)?'Stato non disponibile':active?`In funzione${time?' · Tempo: '+time:''}`:'Spenta','mdi:tumble-dryer',id));
+ }
+ if(c.cooling_climates.length){
+   const time=a.cooling.length?this._timeValue(c.cooling_time_entity):'';
+   rows.push(this._detailRow('Climatizzazione',`${a.cooling.length} di ${c.cooling_climates.length} attivi${time?' · Tempo: '+time:''}`,'mdi:air-conditioner'));
+ }
+ for(const group of a.custom){
+   const ci=group.indicator;
+   rows.push(this._detailRow(ci.name,`${group.active.length} di ${ci.entities.length} attivi`,ci.icon));
+   if(ci.entities.length){
+     const list=ci.entities.map(id=>{
+       const state=this._state(id),label=state?.attributes?.friendly_name||id;
+       const summary=rsKnown(state)?state.state:'Non disponibile';
+       return `<div class="rs-custom-item"><span>${rsEsc(label)} · ${rsEsc(summary)}</span><button type="button" data-more="${rsEsc(id)}">Gestisci</button></div>`;
+     }).join('');
+     rows.push(`<div class="rs-custom-items" aria-label="Entità ${rsEsc(ci.name)}">${list}</div>`);
+   }
+ }
+ const energy=this._state(c.energy_entity);
+ if(c.energy_entity){
+   const amount=rsKnown(energy)&&Number.isFinite(Number(energy.state))?`${new Intl.NumberFormat('it-IT',{maximumFractionDigits:2}).format(Number(energy.state))} ${rsText(energy.attributes?.unit_of_measurement||'',20)}`.trim():'Dato non disponibile';
+   rows.push(this._detailRow('Energia del mese',amount,'mdi:lightning-bolt',c.energy_entity));
+ }
+ const names={'lights-off':'Spegnere tutte le luci accese configurate?','climates-off':'Disattivare il riscaldamento per tutti i termostati attivi configurati?'};
+ root.innerHTML=`<style>${RS_OVERLAY_STYLE}</style><div class="rs-layer" data-backdrop="true"><section class="rs-panel ${palette}" role="dialog" aria-modal="true" aria-label="Dettagli e stato">
+   <div class="rs-dialog-top"><div class="rs-big-icon"><ha-icon icon="mdi:home-outline"></ha-icon></div><div class="rs-popup-titles"><div class="rs-eyebrow">STATO GENERALE DELLA CASA</div><div class="rs-popup-title">Dettagli e stato<span class="rs-dot">.</span></div></div><button type="button" class="rs-x" data-close="true" aria-label="Chiudi dettagli" data-focus="true"><ha-icon icon="mdi:close"></ha-icon></button></div>
+   <div class="rs-dialog-body">${this._confirm?`<div class="rs-confirm"><p>${rsEsc(names[this._confirm]||'Confermare?')}</p><div class="rs-confirm-actions"><button data-cancel="true">Annulla</button><button class="primary" data-execute="${this._confirm}" ${this._busy?'disabled':''}>Conferma</button></div></div>`:''}
+   ${rows.join('')||'<div class="rs-help">Nessun indicatore configurato.</div>'}
+   ${this._error?`<p class="rs-help" role="alert">${rsEsc(this._error)}</p>`:''}</div></section></div>`;
+ const body=root.querySelector('.rs-dialog-body');if(body)body.scrollTop=scrollTop;
+ if(focusKey){const next=[...root.querySelectorAll('button')].find(x=>x.getAttribute(focusKey)===focusValue);next?.focus?.({preventScroll:true});}
+}
   _overlayClick(e){
     const target=e.target;const el=target.closest?.('button');
     if(!el){if(target?.dataset?.backdrop)this._closeOverlay();return;}
@@ -438,12 +494,23 @@ class RoomSelectorCardEditor extends HTMLElement {
         }).join(''):'<div class="rs-e-help">Seleziona un helper con ambienti disponibili per configurare le relative icone.</div>');
     }
     if(this._tab==='indicatori'){
-      body='<div class="rs-e-heading">Indicatori attivi</div><div class="rs-e-desc">Configura le entità da monitorare. Sulla card vengono mostrati soltanto gli stati attivi; nel popup trovi i relativi dettagli.</div>'+
-        this._multi('lights','Luci',RS_DOMAINS.lights)+this._multi('climates','Termostati',RS_DOMAINS.climates)+
+      body='<div class="rs-e-heading">Stato generale della casa</div><div class="rs-e-desc">Allarme e serratura sono sempre visibili sulla card; gli altri indicatori compaiono soltanto quando attivi. I dati sono indipendenti dall’ambiente selezionato.</div>'+
         this._multi('alarms','Allarmi',RS_DOMAINS.alarms)+
-        this._multi('washers','Stati lavatrice',RS_DOMAINS.washers)+
-        this._field('Energia consumata nel mese (facoltativo)','energy_entity','sensor.*')+
-        '<div class="rs-e-heading">Indicatori personalizzati</div><div class="rs-e-desc">Ogni indicatore può monitorare più entità e aiutanti. Le icone si scelgono dal catalogo nativo Home Assistant.</div>'+this._customEditor();
+        this._field('Serratura della porta','lock_entity','lock.*')+
+        this._multi('lights','Luci',RS_DOMAINS.lights)+
+        this._multi('climates','Termosifoni / valvole',RS_DOMAINS.climates)+
+        this._multi('washers','Lavatrice (stato)',RS_DOMAINS.washers)+
+        this._multi('dryers','Asciugatrice (stato)',RS_DOMAINS.dryers)+
+        this._multi('cooling_climates','Climatizzazione (stato)',RS_DOMAINS.cooling_climates)+
+        '<div class="rs-e-heading">Sensori di durata</div><div class="rs-e-desc">Collega gli aiutanti esistenti. Nel popup i tempi compaiono soltanto se i dispositivi corrispondenti sono attivi. Il tempo allarme fuori casa appare solo per quella modalità.</div>'+
+        this._field('Tempo allarme fuori casa','alarm_time_entity','sensor.*')+
+        this._field('Tempo lavatrice','washer_time_entity','sensor.*')+
+        this._field('Tempo asciugatrice','dryer_time_entity','sensor.*')+
+        this._field('Tempo riscaldamento','heating_time_entity','sensor.*')+
+        this._field('Tempo climatizzazione','cooling_time_entity','sensor.*')+
+        '<div class="rs-e-heading">Energia</div>'+
+        this._field('Energia consumata nel mese','energy_entity','sensor.*')+
+        '<div class="rs-e-heading">Indicatori personalizzati</div><div class="rs-e-desc">Ogni indicatore può usare più entità o aiutanti e scegliere l’icona dal catalogo Home Assistant.</div>'+this._customEditor();
     }
     if(this._tab==='aspetto'){
       const theme=`<select class="rs-e-input" data-field="theme_mode">${[['auto','Auto (Home Assistant)'],['light','Light Edera'],['dark','Dark Edera']].map(([v,label])=>`<option value="${v}" ${c.theme_mode===v?'selected':''}>${label}</option>`).join('')}</select>`;
@@ -455,7 +522,8 @@ class RoomSelectorCardEditor extends HTMLElement {
     if(this._tab==='avanzate'){
       body='<div class="rs-e-heading">Avanzate</div><div class="rs-e-desc">La card è inizialmente in sola lettura. Attiva i comandi reali soltanto dopo aver verificato le entità e i permessi Home Assistant.</div>'+
         this._check('controls_enabled','Abilita lo spegnimento di luci e riscaldamento','Richiede conferma prima dei comandi; allarme e lavatrice si gestiscono dall’interfaccia nativa.')+
-        `<div class="rs-e-field"><label>Valore che indica lavatrice attiva</label><input class="rs-e-input" type="text" data-field="washer_active_state" value="${rsEsc(c.washer_active_state)}"/></div>`;
+        `<div class="rs-e-field"><label>Valore che indica lavatrice attiva</label><input class="rs-e-input" type="text" data-field="washer_active_state" value="${rsEsc(c.washer_active_state)}"/></div>`+
+        `<div class="rs-e-field"><label>Valore che indica asciugatrice attiva</label><input class="rs-e-input" type="text" data-field="dryer_active_state" value="${rsEsc(c.dryer_active_state)}"/></div>`;
     }
     this.shadowRoot.innerHTML=`<style>${RS_EDITOR_STYLE}</style><div class="rs-edit ${customElements.get('ha-selector')?'':'rs-e-no-native'}"><div class="rs-e-tabs">${tabs.map(([id,label])=>`<button type="button" class="rs-e-tab ${this._tab===id?'active':''}" data-tab="${id}" aria-pressed="${this._tab===id}">${label}</button>`).join('')}</div>${body}</div>`;
     this._mountSelectors();
@@ -523,8 +591,8 @@ class RoomSelectorCardEditor extends HTMLElement {
     if(!key)return;
     if(key==='controls_enabled'||key==='show_details_button'){this._update({[key]:input.checked});return;}
     if(key==='theme_mode'){this._update({theme_mode:input.value});return;}
-    if(key==='washer_active_state'||key==='eyebrow'){this._update({[key]:input.value});return;}
-    if(key==='lights'||key==='climates'||key==='alarms'||key==='washers'){
+    if(key==='washer_active_state'||key==='dryer_active_state'||key==='eyebrow'){this._update({[key]:input.value});return;}
+    if(key==='lights'||key==='climates'||key==='alarms'||key==='washers'||key==='dryers'||key==='cooling_climates'){
       const value=rsEntity(input.value,RS_DOMAINS[key]);if(value&&!this._config[key].includes(value))this._update({[key]:[...this._config[key],value]});return;
     }
     this._update({[key]:rsEntity(input.value,RS_DOMAINS[key])});

@@ -95,4 +95,32 @@ const customUnsafe=rsConfig({custom_indicators:[{name:'<img src=x onerror=alert(
 assert.equal(customUnsafe.custom_indicators[0].icon,'mdi:information-outline');
 const malicious=new CardMulti();malicious.setConfig(customUnsafe);
 assert.doesNotMatch(malicious.shadowRoot.innerHTML,/<img src=x/);
+
+const home=rsConfig({lock_entity:'lock.front',dryers:['binary_sensor.dryer'],cooling_climates:['climate.ac'],dryer_time_entity:'sensor.time_dryer'});
+assert.equal(home.lock_entity,'lock.front');
+assert.deepEqual(home.dryers,['binary_sensor.dryer']);
+assert.equal(home.dryer_time_entity,'sensor.time_dryer');
+assert.equal(rsConfig({lock_entity:'switch.invalid'}).lock_entity,'');
+const homeCard=new Card();
+homeCard.setConfig({...home,alarms:['alarm_control_panel.house'],lights:['light.x']});
+homeCard.hass={states:{
+ 'lock.front':{state:'unlocked',attributes:{}},
+ 'binary_sensor.dryer':{state:'on',attributes:{}},
+ 'sensor.time_dryer':{state:'37 min',attributes:{}},
+ 'climate.ac':{state:'cool',attributes:{hvac_action:'cooling'}},
+ 'light.x':{state:'off',attributes:{}},
+ 'alarm_control_panel.house':{state:'disarmed',attributes:{}}
+}};
+assert.match(homeCard.shadowRoot.innerHTML,/Allarme disinserito/);
+assert.match(homeCard.shadowRoot.innerHTML,/Porta sbloccata/);
+assert.match(homeCard.shadowRoot.innerHTML,/Asciugatrice attiva/);
+assert.match(homeCard.shadowRoot.innerHTML,/Climatizzatore attivo/);
+assert.doesNotMatch(homeCard.shadowRoot.innerHTML,/1 luce accesa/);
+assert.equal(homeCard._timeValue('sensor.time_dryer'),'37 min');
+homeCard.setConfig({...homeCard._config,alarms:[],lock_entity:''});
+homeCard.hass={states:{}};
+assert.match(homeCard.shadowRoot.innerHTML,/Allarme da configurare/);
+assert.match(homeCard.shadowRoot.innerHTML,/Serratura da configurare/);
+assert.doesNotMatch(homeCard.shadowRoot.innerHTML,/Asciugatrice attiva/);
+
 console.log('OK — legacy compatibility, multi-entity helpers, native-safe icons, alarm timing, conditional display, explicit controls.');
