@@ -61,4 +61,38 @@ assert.ok(card.shadowRoot.innerHTML.includes('Allarme in corso'));
 const unsafe=rsConfig({room_icons:{'Open Space':'mdi:home\" onload=alert(1)'},lights:['light.x<script>']});
 assert.equal(unsafe.room_icons['Open Space'],'mdi:home-outline');
 assert.deepEqual(unsafe.lights,[]);
-console.log('OK — config, selection, active indicators, control opt-in, alarm critical state, validation.');
+// Existing alarm and washer entity IDs migrate to arrays without changing the saved configuration.
+const legacy=rsConfig({alarm_entity:'alarm_control_panel.old',washer_entity:'input_boolean.washer'});
+assert.deepEqual(legacy.alarms,['alarm_control_panel.old']);
+assert.deepEqual(legacy.washers,['input_boolean.washer']);
+assert.deepEqual(rsConfig({...legacy,alarms:[],washers:[]}).alarms,[],'Explicitly cleared legacy alarms stay removed');
+const expanded=rsConfig({
+  alarms:['alarm_control_panel.first','alarm_control_panel.second'],
+  washers:['binary_sensor.wash1','input_boolean.wash2'],
+  custom_indicators:[{name:'Deumidificatori',icon:'mdi:air-humidifier',active_state:'on',entities:['input_boolean.dehumidifier','switch.air','sensor.invalid-syntax!']}]
+});
+assert.equal(expanded.custom_indicators.length,1);
+assert.deepEqual(expanded.custom_indicators[0].entities,['input_boolean.dehumidifier','switch.air']);
+assert.equal(expanded.custom_indicators[0].icon,'mdi:air-humidifier');
+assert.deepEqual(expanded.alarms,['alarm_control_panel.first','alarm_control_panel.second']);
+assert.deepEqual(expanded.washers,['binary_sensor.wash1','input_boolean.wash2']);
+assert.ok(rsDuration(new Date(Date.now()-75*60000).toISOString()).includes('ora e 15 min'));
+const CardMulti=elements.get('room-selector-card');
+const multi=new CardMulti();
+multi.setConfig(expanded);
+multi.hass={states:{
+  'alarm_control_panel.first':{state:'armed_home',last_changed:new Date(Date.now()-3600000).toISOString(),attributes:{}},
+  'alarm_control_panel.second':{state:'disarmed',attributes:{}},
+  'binary_sensor.wash1':{state:'off',attributes:{}},'input_boolean.wash2':{state:'on',attributes:{}},
+  'input_boolean.dehumidifier':{state:'on',attributes:{}},'switch.air':{state:'off',attributes:{}}
+}};
+assert.deepEqual(multi._active().alarms,['alarm_control_panel.first']);
+assert.deepEqual(multi._active().washers,['input_boolean.wash2']);
+assert.deepEqual(multi._active().custom[0].active,['input_boolean.dehumidifier']);
+assert.match(multi.shadowRoot.innerHTML,/Deumidificatori/);
+assert.doesNotMatch(multi.shadowRoot.innerHTML,/2 allarmi inseriti/);
+const customUnsafe=rsConfig({custom_indicators:[{name:'<img src=x onerror=alert(1)>',icon:'mdi:bell" onload=bad',active_state:'on',entities:['switch.test']} ]});
+assert.equal(customUnsafe.custom_indicators[0].icon,'mdi:information-outline');
+const malicious=new CardMulti();malicious.setConfig(customUnsafe);
+assert.doesNotMatch(malicious.shadowRoot.innerHTML,/<img src=x/);
+console.log('OK — legacy compatibility, multi-entity helpers, native-safe icons, alarm timing, conditional display, explicit controls.');

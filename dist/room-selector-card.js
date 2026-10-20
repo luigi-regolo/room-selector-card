@@ -14,8 +14,11 @@ const RS_DEFAULTS = Object.freeze({
   room_icons: {},
   lights: [],
   climates: [],
-  alarm_entity: '',
-  washer_entity: '',
+  alarm_entity: '', // Legacy configuration supported
+  alarms: [],
+  washer_entity: '', // Legacy configuration supported
+  washers: [],
+  custom_indicators: [],
   washer_active_state: 'on',
   energy_entity: '',
   controls_enabled: false,
@@ -26,7 +29,10 @@ const RS_DOMAINS = Object.freeze({
   lights: ['light'],
   climates: ['climate'],
   alarm_entity: ['alarm_control_panel'],
+  alarms: ['alarm_control_panel'],
   washer_entity: ['binary_sensor', 'sensor', 'switch', 'input_boolean'],
+  washers: ['binary_sensor', 'sensor', 'switch', 'input_boolean'],
+  custom_entities: ['input_boolean', 'binary_sensor', 'sensor', 'light', 'switch', 'fan', 'climate', 'cover', 'alarm_control_panel'],
   energy_entity: ['sensor']
 });
 const RS_ARMED = new Set(['armed_home','armed_away','armed_night','armed_vacation','armed_custom_bypass']);
@@ -43,6 +49,20 @@ function rsIcon(value, fallback='mdi:home-outline') {
 }
 function rsArray(value, domains) {
   return Array.isArray(value) ? [...new Set(value.map(v=>rsEntity(v,domains)).filter(Boolean))].slice(0,40) : [];
+}
+function rsCustom(raw={}) {
+  const r=raw && typeof raw==='object' && !Array.isArray(raw) ? raw : {};
+  return {
+    name:rsText(r.name||'Nuovo indicatore',55),
+    icon:rsIcon(r.icon,'mdi:information-outline'),
+    active_state:rsText(r.active_state??'on',60)||'on',
+    entities:rsArray(r.entities,RS_DOMAINS.custom_entities)
+  };
+}
+function rsIsCustomActive(entity, custom) {
+  if(!rsKnown(entity))return false;
+  // Exact matching prevents unknown / unavailable values from appearing active.
+  return entity.state===custom.active_state;
 }
 function rsConfig(raw={}) {
   const r=raw && typeof raw==='object' && !Array.isArray(raw) ? raw : {};
@@ -61,7 +81,10 @@ function rsConfig(raw={}) {
     lights:rsArray(r.lights,RS_DOMAINS.lights),
     climates:rsArray(r.climates,RS_DOMAINS.climates),
     alarm_entity:rsEntity(r.alarm_entity,RS_DOMAINS.alarm_entity),
+    alarms:rsArray(Array.isArray(r.alarms)?r.alarms:(r.alarm_entity?[r.alarm_entity]:[]),RS_DOMAINS.alarms),
     washer_entity:rsEntity(r.washer_entity,RS_DOMAINS.washer_entity),
+    washers:rsArray(Array.isArray(r.washers)?r.washers:(r.washer_entity?[r.washer_entity]:[]),RS_DOMAINS.washers),
+    custom_indicators:Array.isArray(r.custom_indicators)?r.custom_indicators.slice(0,16).map(rsCustom):[],
     washer_active_state:rsText(r.washer_active_state ?? 'on',40) || 'on',
     energy_entity:rsEntity(r.energy_entity,RS_DOMAINS.energy_entity),
     controls_enabled:r.controls_enabled===true,
@@ -85,7 +108,9 @@ function rsDuration(date) {
   if(minutes<1)return 'da poco';
   if(minutes<60)return `da ${minutes} min`;
   const hours=Math.floor(minutes/60);
-  return hours<24?`da ${hours} ${hours===1?'ora':'ore'}`:`da ${Math.floor(hours/24)} ${Math.floor(hours/24)===1?'giorno':'giorni'}`;
+  if(hours<24)return `da ${hours} ${hours===1?'ora':'ore'}${minutes%60?` e ${minutes%60} min`:''}`;
+  const days=Math.floor(hours/24);
+  return `da ${days} ${days===1?'giorno':'giorni'}${hours%24?` e ${hours%24} h`:''}`;
 }
 const RS_STYLE = `
 :host{display:block;min-width:0;container-type:inline-size;font-family:var(--ha-font-family-body,var(--paper-font-body1_-_font-family,Roboto,Arial,sans-serif));font-size:14px}
@@ -99,7 +124,7 @@ const RS_STYLE = `
 .rs-toggle:focus-visible,.rs-chip:focus-visible,.rs-details:focus-visible{outline:2px solid var(--rs-green);outline-offset:3px}
 .rs-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px}
 .rs-chip{border:1px solid var(--rs-line);background:var(--rs-surface);color:var(--rs-text);border-radius:14px;padding:9px 11px;min-height:40px;display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600;max-width:100%;white-space:normal;text-align:left}
-.rs-chip ha-icon{--mdc-icon-size:18px;flex:none}.rs-chip.light ha-icon{color:#e4b24d}.rs-chip.climate ha-icon{color:#eb9654}.rs-chip.alarm ha-icon{color:#0b9b77}.rs-chip.alarm-critical ha-icon{color:#db6867}.rs-chip.washer ha-icon{color:#87a7ba}
+.rs-chip ha-icon{--mdc-icon-size:18px;flex:none}.rs-chip.light ha-icon{color:#e4b24d}.rs-chip.climate ha-icon{color:#eb9654}.rs-chip.alarm ha-icon{color:#0b9b77}.rs-chip.alarm-critical ha-icon{color:#db6867}.rs-chip.washer ha-icon{color:#87a7ba}.rs-chip.custom ha-icon{color:var(--rs-green)}
 .rs-bottom{margin-top:14px;display:flex;justify-content:flex-start}.rs-details{border:0;background:var(--rs-green);color:#fff;font-size:11px;font-weight:650;border-radius:999px;padding:7px 11px;display:inline-flex;align-items:center;gap:6px;min-height:30px;line-height:1.2}
 .rs-details ha-icon{--mdc-icon-size:14px}.rs-notice{font-size:12px;color:var(--rs-muted);margin:13px 4px 0;line-height:1.45}.rs-error{font-size:12px;color:var(--error-color,#d86d60);margin-top:10px;overflow-wrap:anywhere}
 @container(max-width:360px){.rs-card{padding:13px;border-radius:23px}.rs-title{font-size:23px}.rs-chips{gap:6px;margin-top:12px}.rs-chip{font-size:11px;padding:7px 9px;min-height:36px}.rs-toggle{min-width:38px;width:38px;height:38px}.rs-bottom{margin-top:12px}}
@@ -120,7 +145,7 @@ const RS_OVERLAY_STYLE = `
 .rs-x{width:36px;height:36px;flex:none;display:grid;place-items:center;border-radius:50%;background:var(--rs-surface);border:0;color:var(--rs-text);padding:0}.rs-x ha-icon{--mdc-icon-size:18px}
 .rs-dialog-body{padding:0 2px 2px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;min-height:0;scrollbar-gutter:stable}
 .rs-row{display:flex;align-items:center;gap:10px;background:var(--rs-surface);border:1px solid var(--rs-line);padding:11px 12px;border-radius:14px;min-width:0;margin:0 0 9px;min-height:66px}
-.rs-row-icon{width:38px;height:38px;display:grid;place-items:center;flex:none;border-radius:50%;color:var(--rs-text);background:var(--rs-circle)}.rs-row-icon ha-icon{--mdc-icon-size:20px}
+.rs-row-icon{width:38px;height:38px;display:grid;place-items:center;flex:none;border-radius:50%;color:var(--rs-text);background:var(--rs-circle)}.rs-row-icon ha-icon{--mdc-icon-size:20px}.rs-custom-items{margin:0 0 12px 14px;padding-left:10px;border-left:2px solid var(--rs-line)}.rs-custom-item{display:flex;align-items:center;gap:9px;padding:7px 0;font-size:12px}.rs-custom-item span{flex:1;overflow-wrap:anywhere}.rs-custom-item button{font:inherit;font-size:12px;padding:6px 9px;border:1px solid var(--rs-line);border-radius:9px;background:var(--rs-surface);color:var(--rs-text);cursor:pointer}
 .rs-row-txt{flex:1;min-width:0}.rs-row-title{font-size:13px;font-weight:650}.rs-row-desc{font-size:12px;color:var(--rs-muted);margin-top:3px;overflow-wrap:anywhere}.rs-row button{border:1px solid var(--rs-line);border-radius:999px;color:var(--rs-text);background:var(--rs-circle);padding:8px 10px;font-size:11px;min-height:32px;white-space:nowrap;flex:none}
 .rs-help{font-size:12px;color:var(--rs-muted);line-height:1.5;margin:11px 2px}.rs-confirm{border:1px solid #bd8a4e;background:#b17c2a1c;padding:12px;border-radius:14px;margin-bottom:12px}.rs-confirm p{font-size:13px;margin:0 0 10px}.rs-confirm-actions{display:flex;gap:9px}.rs-confirm-actions button{border-radius:999px;min-height:36px;font-size:12px;border:1px solid var(--rs-line);padding:7px 12px;color:var(--rs-text);background:var(--rs-circle)}.rs-confirm-actions button.primary{background:var(--rs-green);border-color:var(--rs-green);color:#fff}
 .rs-menu{position:fixed;max-height:min(460px,calc(100dvh - 20px));overflow-y:auto;overflow-x:hidden;min-width:220px;max-width:calc(100vw - 16px);padding:8px;border-radius:18px;box-shadow:0 18px 60px #0009}
@@ -133,16 +158,16 @@ class RoomSelectorCard extends HTMLElement {
   static getConfigElement(){return document.createElement(RS_EDITOR);}
   constructor(){
     super();this.attachShadow({mode:'open'});this._config=rsConfig();this._hass=null;
-    this._sig='';this._overlaySig='';this._overlay=null;this._overlayMode='';this._confirm='';this._busy=false;this._error='';this._returnFocus=null;
+    this._clockTimer=null;this._sig='';this._overlaySig='';this._overlay=null;this._overlayMode='';this._confirm='';this._busy=false;this._error='';this._returnFocus=null;
     this._onCardClick=e=>this._cardClick(e);this.shadowRoot.addEventListener('click',this._onCardClick);
     this._outside=e=>{if(e.target===this._overlay)this._closeOverlay();};
     this._escape=e=>{if(!this._overlay)return;if(e.key==='Escape'){e.preventDefault();this._closeOverlay();return;}if(e.key==='Tab'&&this._overlayMode==='details'){const buttons=[...this._overlay.shadowRoot.querySelectorAll('button:not([disabled])')];if(!buttons.length)return;const active=this._overlay.shadowRoot.activeElement;const index=buttons.indexOf(active);if(e.shiftKey && (index<=0)){e.preventDefault();buttons[buttons.length-1].focus();}else if(!e.shiftKey && index===buttons.length-1){e.preventDefault();buttons[0].focus();}}};
     this._onMove=()=>{if(this._overlayMode==='menu')this._positionMenu();};
   }
-  connectedCallback(){this._render();}
-  disconnectedCallback(){this._closeOverlay();}
-  setConfig(raw){this._config=rsConfig(raw);this._sig='';this._closeOverlay();this._render();}
-  set hass(hass){this._hass=hass;const old=this._sig;this._render();if(this._overlayMode==='details'&&old!==this._sig)this._renderOverlay();}
+  connectedCallback(){this._render();this._syncClock();}
+  disconnectedCallback(){this._stopClock();this._closeOverlay();}
+  setConfig(raw){this._config=rsConfig(raw);this._sig='';this._closeOverlay();this._render();this._syncClock();}
+  set hass(hass){this._hass=hass;const old=this._sig;this._render();if(this._overlayMode==='details'&&old!==this._sig)this._renderOverlay();this._syncClock();}
   getCardSize(){return 3;}
   _state(id){return id ? this._hass?.states?.[id]:null;}
   _palette(){const m=this._config.theme_mode;return `rs-${m==='auto'?(this._hass?.themes?.darkMode===true?'dark':'light'):m}`;}
@@ -153,18 +178,33 @@ class RoomSelectorCard extends HTMLElement {
     const c=this._config;
     const lights=c.lights.filter(id=>this._state(id)?.state==='on');
     const climates=c.climates.filter(id=>this._state(id)?.attributes?.hvac_action==='heating');
-    const alarm=this._state(c.alarm_entity);
-    const washer=this._state(c.washer_entity);
-    return {
-      lights,climates,
-      alarm:rsKnown(alarm)&&(RS_ARMED.has(alarm.state)||RS_ALARM_ATTENTION.has(alarm.state))?alarm:null,
-      washer:rsKnown(washer)&&washer.state===c.washer_active_state?washer:null
-    };
+    const alarms=c.alarms.filter(id=>{const a=this._state(id);return rsKnown(a)&&(RS_ARMED.has(a.state)||RS_ALARM_ATTENTION.has(a.state));});
+    const washers=c.washers.filter(id=>{const a=this._state(id);return rsKnown(a)&&a.state===c.washer_active_state;});
+    const custom=c.custom_indicators.map((indicator,index)=>({index,indicator,active:indicator.entities.filter(id=>rsIsCustomActive(this._state(id),indicator))}));
+    return {lights,climates,alarms,washers,custom};
+  }
+  _stopClock(){if(this._clockTimer!=null){window.clearInterval?.(this._clockTimer);this._clockTimer=null;}}
+  _syncClock(){
+    if(!this.isConnected)return;
+    const active=this._active().alarms.length>0;
+    if(!active){this._stopClock();return;}
+    if(this._clockTimer!=null||typeof window.setInterval!=='function')return;
+    // Only active alarms need the passage-of-time refresh; no network polling.
+    this._clockTimer=window.setInterval(()=>{
+      if(!this.isConnected)return;
+      const old=this._sig;this._render();
+      if(this._overlayMode==='details'&&old!==this._sig)this._renderOverlay();
+      this._syncClock();
+    },30000);
   }
   _signature(){
-    const c=this._config;const ids=[c.selection_entity,...c.lights,...c.climates,c.alarm_entity,c.washer_entity,c.energy_entity];
-    const input=ids.filter(Boolean).map(id=>{const o=this._state(id);return [id,o?.state,o?.last_changed,o?.attributes?.options,o?.attributes?.hvac_action,o?.attributes?.hvac_modes,o?.attributes?.unit_of_measurement];});
-    return JSON.stringify([input,this._hass?.themes?.darkMode,c]);
+    const c=this._config;
+    const ids=[c.selection_entity,...c.lights,...c.climates,...c.alarms,...c.washers,c.energy_entity,...c.custom_indicators.flatMap(x=>x.entities)];
+    const input=[...new Set(ids.filter(Boolean))].map(id=>{
+      const o=this._state(id);
+      return [id,o?.state,o?.last_changed,o?.attributes?.options,o?.attributes?.hvac_action,o?.attributes?.hvac_modes,o?.attributes?.unit_of_measurement];
+    });
+    return JSON.stringify([input,this._hass?.themes?.darkMode,c,this._active().alarms.length?Math.floor(Date.now()/60000):0]);
   }
   _render(){
     if(!this.isConnected)return;
@@ -172,8 +212,18 @@ class RoomSelectorCard extends HTMLElement {
     const a=this._active();const chips=[];
     if(a.lights.length) chips.push({kind:'light',icon:'mdi:lightbulb-on-outline',label:`${a.lights.length} ${a.lights.length===1?'luce accesa':'luci accese'}`});
     if(a.climates.length) chips.push({kind:'climate',icon:'mdi:radiator',label:`${a.climates.length} ${a.climates.length===1?'termosifone attivo':'termosifoni attivi'}`});
-    if(a.alarm){const urgent=RS_ALARM_ATTENTION.has(a.alarm.state);chips.push({kind:urgent?'alarm-critical':'alarm',icon:urgent?'mdi:shield-alert-outline':'mdi:shield-lock-outline',label:a.alarm.state==='triggered'?'Allarme in corso':urgent?'Allarme in transizione':`Allarme ${rsDuration(a.alarm.last_changed)||'inserito'}`});}
-    if(a.washer)chips.push({kind:'washer',icon:'mdi:washing-machine',label:'Lavatrice attiva'});
+    if(a.alarms.length){
+      const entities=a.alarms.map(id=>this._state(id));
+      const urgent=entities.some(x=>RS_ALARM_ATTENTION.has(x.state));
+      const first=entities[0];
+      const label=urgent?(entities.some(x=>x.state==='triggered')?'Allarme in corso':'Allarme in transizione'):
+        a.alarms.length===1?`Allarme ${rsDuration(first.last_changed)||'inserito'}`:`${a.alarms.length} allarmi inseriti`;
+      chips.push({kind:urgent?'alarm-critical':'alarm',icon:urgent?'mdi:shield-alert-outline':'mdi:shield-lock-outline',label});
+    }
+    if(a.washers.length)chips.push({kind:'washer',icon:'mdi:washing-machine',label:a.washers.length===1?'Lavatrice attiva':`${a.washers.length} dispositivi lavaggio attivi`});
+    for(const group of a.custom){
+      if(group.active.length)chips.push({kind:'custom',icon:group.indicator.icon,label:group.active.length===1?group.indicator.name:`${group.indicator.name} · ${group.active.length} attivi`});
+    }
     const room=this._current();const missing=!this._config.selection_entity || !this._state(this._config.selection_entity);
     this.shadowRoot.innerHTML=`<style>${RS_STYLE}</style><div class="rs-card ${this._palette()}">
       <div class="rs-header"><div class="rs-headtext"><p class="rs-eyebrow">${rsEsc(this._config.eyebrow)}</p><h2 class="rs-title">${rsEsc(room||'Seleziona ambiente')}<span class="rs-dot">.</span></h2></div>
@@ -216,6 +266,10 @@ class RoomSelectorCard extends HTMLElement {
   _renderOverlay(){
     if(!this._overlay)return;
     const root=this._overlay.shadowRoot;const palette=this._palette();const room=this._current();
+    const scrollTop=root.querySelector('.rs-dialog-body')?.scrollTop||0;
+    const oldFocus=root.activeElement;
+    const focusKey=oldFocus&&['data-more','data-close','data-cancel','data-execute','data-action'].find(key=>oldFocus.hasAttribute(key));
+    const focusValue=focusKey?oldFocus.getAttribute(focusKey):null;
     if(this._overlayMode==='menu'){
       const items=this._options();root.innerHTML=`<style>${RS_OVERLAY_STYLE}</style><div class="rs-layer menu-layer" data-backdrop="true" style="pointer-events:auto"><div class="rs-menu ${palette}" role="menu" aria-label="Ambienti">
         ${items.map((name,i)=>`<button type="button" role="menuitemradio" aria-checked="${name===room}" aria-current="${name===room}" data-room="${rsEsc(name)}" ${i===0?'data-focus="true"':''}><ha-icon icon="${rsIcon(this._roomIcon(name))}"></ha-icon><span>${rsEsc(name)}</span>${name===room?'<ha-icon icon="mdi:check"></ha-icon>':''}</button>`).join('')}</div></div>`;
@@ -227,8 +281,32 @@ class RoomSelectorCard extends HTMLElement {
       const canStop=a.climates.length>0 && a.climates.every(id=>this._state(id)?.attributes?.hvac_modes?.includes('off'));
       rows.push(this._detailRow('Riscaldamento',`${a.climates.length} di ${c.climates.length} in riscaldamento`,'mdi:radiator','',canStop&&c.controls_enabled?'climates-off':''));
     }
-    if(c.alarm_entity){const alarm=this._state(c.alarm_entity);const text=!rsKnown(alarm)?'Stato non disponibile':alarm.state==='disarmed'?'Disinserito':alarm.state==='triggered'?'Allarme in corso':RS_ARMED.has(alarm.state)?`Inserito ${rsDuration(alarm.last_changed)}`:alarm.state==='arming'||alarm.state==='pending'?'Transizione in corso':`Stato: ${alarm.state}`;rows.push(this._detailRow('Allarme',text,'mdi:shield-lock-outline',c.alarm_entity));}
-    if(c.washer_entity){const washer=this._state(c.washer_entity);rows.push(this._detailRow('Lavatrice',!rsKnown(washer)?'Stato non disponibile':a.washer?'In funzione':'Non in funzione','mdi:washing-machine',c.washer_entity));}
+    for(const id of c.alarms){
+      const alarm=this._state(id);
+      const text=!rsKnown(alarm)?'Stato non disponibile':alarm.state==='disarmed'?'Disinserito':
+        alarm.state==='triggered'?'Allarme in corso':RS_ARMED.has(alarm.state)?`Inserito ${rsDuration(alarm.last_changed)}`:
+        alarm.state==='arming'||alarm.state==='pending'?'Transizione in corso':`Stato: ${alarm.state}`;
+      rows.push(this._detailRow(c.alarms.length>1?(alarm?.attributes?.friendly_name||id):'Allarme',text,'mdi:shield-lock-outline',id));
+    }
+    for(const id of c.washers){
+      const washer=this._state(id);
+      const active=a.washers.includes(id);
+      rows.push(this._detailRow(c.washers.length>1?(washer?.attributes?.friendly_name||id):'Lavatrice',
+        !rsKnown(washer)?'Stato non disponibile':active?'In funzione':'Non in funzione','mdi:washing-machine',id));
+    }
+    for(const group of a.custom){
+      const ci=group.indicator;
+      rows.push(this._detailRow(ci.name,`${group.active.length} di ${ci.entities.length} attivi`,ci.icon));
+      if(ci.entities.length){
+        const list=ci.entities.map(id=>{
+          const state=this._state(id);
+          const label=state?.attributes?.friendly_name||id;
+          const summary=rsKnown(state)?state.state:'Non disponibile';
+          return `<div class="rs-custom-item"><span>${rsEsc(label)} · ${rsEsc(summary)}</span><button type="button" data-more="${rsEsc(id)}">Gestisci</button></div>`;
+        }).join('');
+        rows.push(`<div class="rs-custom-items" aria-label="Entità ${rsEsc(ci.name)}">${list}</div>`);
+      }
+    }
     const energy=this._state(c.energy_entity);if(c.energy_entity){
       const amount=rsKnown(energy)&&Number.isFinite(Number(energy.state))?`${new Intl.NumberFormat('it-IT',{maximumFractionDigits:2}).format(Number(energy.state))} ${rsText(energy.attributes?.unit_of_measurement||'',20)}`.trim():'Dato non disponibile';
       rows.push(this._detailRow('Energia del mese',amount,'mdi:lightning-bolt',c.energy_entity));
@@ -239,6 +317,11 @@ class RoomSelectorCard extends HTMLElement {
       <div class="rs-dialog-body">${this._confirm?`<div class="rs-confirm"><p>${rsEsc(names[this._confirm]||'Confermare?')}</p><div class="rs-confirm-actions"><button data-cancel="true">Annulla</button><button class="primary" data-execute="${this._confirm}" ${this._busy?'disabled':''}>Conferma</button></div></div>`:''}
       ${rows.length?rows.join(''):'<div class="rs-help">Nessun indicatore configurato. Aggiungi le entità dall’editor visuale.</div>'}
       ${this._error?`<p class="rs-help" role="alert">${rsEsc(this._error)}</p>`:''}</div></section></div>`;
+    const body=root.querySelector('.rs-dialog-body');if(body)body.scrollTop=scrollTop;
+    if(focusKey){
+      const next=[...root.querySelectorAll('button')].find(x=>x.getAttribute(focusKey)===focusValue);
+      next?.focus?.({preventScroll:true});
+    }
   }
   _overlayClick(e){
     const target=e.target;const el=target.closest?.('button');
@@ -285,10 +368,13 @@ const RS_EDITOR_STYLE = `
 .rs-e-button{background:var(--secondary-background-color,#eff2ee);border:1px solid var(--divider-color,#dbe2db);color:var(--primary-text-color,#18221c);padding:9px 12px;border-radius:14px}.rs-e-button:disabled{opacity:.45;cursor:not-allowed}.rs-e-clear{display:flex;align-items:center;justify-content:center;flex:none;width:36px;height:36px;background:var(--secondary-background-color,#eef1ef);border:1px solid var(--divider-color,#dfe5df);border-radius:50%;color:var(--secondary-text-color,#57655c);padding:0}.rs-e-clear ha-icon{--mdc-icon-size:18px}
 .rs-e-check{border-bottom:1px solid var(--divider-color,#e3e7e3);padding:13px 0;display:flex;align-items:center;justify-content:space-between;gap:15px;font-size:13px}.rs-e-check input{width:18px;height:18px;accent-color:var(--primary-color,#0c7157);flex:none}
 .rs-e-item{display:flex;align-items:center;gap:9px;padding:10px 0;border-bottom:1px solid var(--divider-color,#e3e7e3)}.rs-e-item span{flex:1;overflow-wrap:anywhere;font-size:13px}.rs-e-room{border-bottom:1px solid var(--divider-color,#e3e7e3);padding:12px 0 16px}.rs-e-room-title{font-size:13px;font-weight:650;margin-bottom:8px}.rs-e-icon-line{display:flex;align-items:center;gap:12px}.rs-e-icon-line ha-icon{--mdc-icon-size:24px;flex:none;color:var(--primary-text-color)}
+ .rs-e-icon-picker{flex:1;min-width:0}.rs-e-icon-picker ha-selector{display:block;width:100%}.rs-e-icon-fallback{display:none}.rs-e-no-native .rs-e-icon-fallback{display:block}.rs-e-no-native [data-icon-selector]{display:none}
+.rs-e-choice{display:flex;flex-wrap:wrap;gap:6px;padding:10px 0;border-bottom:1px solid var(--divider-color,#dfe5df)}.rs-e-choice button{font:inherit;color:var(--secondary-text-color);background:transparent;border:0;padding:9px 11px;border-radius:11px;cursor:pointer}.rs-e-choice button.active{background:var(--secondary-background-color);color:var(--primary-text-color);font-weight:650}
+.rs-e-item ha-icon{--mdc-icon-size:21px;color:var(--secondary-text-color)}.rs-e-group{padding-bottom:20px;border-bottom:1px solid var(--divider-color,#dfe5df)}.rs-e-sub{font-size:15px;font-weight:650;margin:18px 0 10px}.rs-e-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .rs-e-input:focus-visible,.rs-e-button:focus-visible,.rs-e-tab:focus-visible,.rs-e-clear:focus-visible{outline:2px solid var(--primary-color,#0b7457);outline-offset:2px}
 `;
 class RoomSelectorCardEditor extends HTMLElement {
-  constructor(){super();this.attachShadow({mode:'open'});this._config=rsConfig();this._hass=null;this._attempted=false;this._tab='ambienti';this._optionsSig='';
+  constructor(){super();this.attachShadow({mode:'open'});this._config=rsConfig();this._hass=null;this._attempted=false;this._tab='ambienti';this._optionsSig='';this._selectedCustom=0;
     this.shadowRoot.addEventListener('click',e=>this._click(e));this.shadowRoot.addEventListener('change',e=>this._change(e));}
   set hass(hass){this._hass=hass;this.shadowRoot.querySelectorAll('ha-selector').forEach(el=>el.hass=hass);const options=hass?.states?.[this._config.selection_entity]?.attributes?.options;const sig=JSON.stringify(Array.isArray(options)?options:[]);if(sig!==this._optionsSig){this._optionsSig=sig;this._render();}}
   setConfig(raw){const cfg=rsConfig(raw);if(JSON.stringify(cfg)===JSON.stringify(this._config)&&this.shadowRoot.querySelector('.rs-edit'))return;this._config=cfg;this._render();}
@@ -297,13 +383,43 @@ class RoomSelectorCardEditor extends HTMLElement {
     if(!customElements.get('ha-selector')){try{const helper=await window.loadCardHelpers?.();await helper?.importSelector?.();}catch{/* Inputs remain usable */}}
     this._render();}
   _update(patch){this._config=rsConfig({...this._config,...patch});this.dispatchEvent(new CustomEvent('config-changed',{detail:{config:this._config},bubbles:true,composed:true}));this._render();}
+  _iconPicker(scope,index,icon,roomName=''){
+    const fallback=rsIcon(icon,'mdi:information-outline');
+    const attrs=`data-icon-selector="${scope}" data-icon-index="${index}" ${roomName?`data-icon-room="${rsEsc(roomName)}"`:''}`;
+    return `<div class="rs-e-icon-line"><ha-icon icon="${fallback}" aria-hidden="true"></ha-icon><div class="rs-e-icon-picker"><div ${attrs}></div><div class="rs-e-icon-fallback"><input type="text" class="rs-e-input" data-icon-fallback="${scope}" data-icon-index="${index}" ${roomName?`data-icon-room="${rsEsc(roomName)}"`:''} value="${fallback}" aria-label="Icona MDI"/></div></div></div>`;
+  }
+  _entityLine(id,key='',index=-1){
+    const state=this._hass?.states?.[id];
+    const icon=rsIcon(state?.attributes?.icon,'mdi:checkbox-marked-circle-outline');
+    const label=state?.attributes?.friendly_name||id;
+    return `<div class="rs-e-item"><ha-icon icon="${icon}"></ha-icon><span>${rsEsc(label)}<div class="rs-e-help">${rsEsc(id)}</div></span><button type="button" class="rs-e-clear" ${key==='custom'?`data-custom-remove="${index}"`: `data-remove="${key}"`} data-id="${rsEsc(id)}" aria-label="Rimuovi ${rsEsc(id)}"><ha-icon icon="mdi:close"></ha-icon></button></div>`;
+  }
+  _changeCustom(index,patch){
+    if(!this._config.custom_indicators[index])return;
+    const arr=this._config.custom_indicators.map((obj,i)=>i===index?{...obj,...patch}:obj);
+    this._update({custom_indicators:arr});
+  }
   _field(label,key,placeholder=''){
     const val=this._config[key]||'';
     return `<div class="rs-e-field"><label>${rsEsc(label)}</label><div class="rs-e-line"><div class="rs-e-selector"><div data-selector="${key}"></div><div class="rs-e-fallback"><input class="rs-e-input" type="text" data-field="${key}" placeholder="${rsEsc(placeholder)}" value="${rsEsc(val)}"/></div></div>${val?`<button type="button" class="rs-e-clear" data-clear="${key}" aria-label="Rimuovi ${rsEsc(label)}"><ha-icon icon="mdi:close"></ha-icon></button>`:''}</div></div>`;
   }
   _multi(key,label,domains){
-    return `<div class="rs-e-field"><div class="rs-e-label">${rsEsc(label)}</div>${this._config[key].map(id=>`<div class="rs-e-item"><span>${rsEsc(id)}</span><button type="button" class="rs-e-clear" data-remove="${key}" data-id="${rsEsc(id)}" aria-label="Rimuovi ${rsEsc(id)}"><ha-icon icon="mdi:close"></ha-icon></button></div>`).join('')}
+    return `<div class="rs-e-field"><div class="rs-e-label">${rsEsc(label)}</div>${this._config[key].map(id=>this._entityLine(id,key)).join('')}
     <div class="rs-e-line"><div class="rs-e-selector"><div data-selector="${key}" data-add="true"></div><div class="rs-e-fallback"><input class="rs-e-input" type="text" data-field="${key}" placeholder="${domains[0]}.*" value=""/></div></div></div></div>`;
+  }
+  _customEditor(){
+    const all=this._config.custom_indicators;
+    if(!all.length)return `<div class="rs-e-help">Nessun indicatore personalizzato.</div><button class="rs-e-button" type="button" data-custom-add="true">+ Aggiungi indicatore</button>`;
+    this._selectedCustom=Math.max(0,Math.min(this._selectedCustom,all.length-1));
+    const index=this._selectedCustom, ci=all[index];
+    const picker=`<div class="rs-e-choice">${all.map((v,i)=>`<button type="button" data-custom-select="${i}" class="${i===index?'active':''}">${rsEsc(v.name||`Indicatore ${i+1}`)}</button>`).join('')}</div>`;
+    return picker+`<div class="rs-e-group"><div class="rs-e-actions"><button type="button" class="rs-e-button" data-custom-add="true">+ Aggiungi</button><button type="button" class="rs-e-button" data-custom-move="-1" ${index===0?'disabled':''}>Sposta su</button><button type="button" class="rs-e-button" data-custom-move="1" ${index===all.length-1?'disabled':''}>Sposta giù</button><button type="button" class="rs-e-button" data-custom-delete="true">Elimina</button></div>
+      <div class="rs-e-field"><label>Nome visualizzato</label><input class="rs-e-input" data-custom-field="name" type="text" maxlength="55" value="${rsEsc(ci.name)}"/></div>
+      <div class="rs-e-field"><label>Icona (catalogo Home Assistant)</label>${this._iconPicker('custom',index,ci.icon)}</div>
+      <div class="rs-e-field"><label>Stato che indica attività</label><input class="rs-e-input" type="text" data-custom-field="active_state" maxlength="60" value="${rsEsc(ci.active_state)}"/><div class="rs-e-help">Confronto esatto: per esempio on, running o active. Gli stati sconosciuti non attivano l'indicatore.</div></div>
+      <div class="rs-e-field"><label>Entità e aiutanti</label>${ci.entities.map(id=>this._entityLine(id,'custom',index)).join('')}
+      <div class="rs-e-line"><div class="rs-e-selector"><div data-custom-add-entity="${index}"></div><div class="rs-e-fallback"><input class="rs-e-input" type="text" data-custom-entity-input="${index}" placeholder="input_boolean.*, binary_sensor.*, sensor.*"/></div></div></div><div class="rs-e-help">Puoi aggiungere più entità. Nel popup ciascuna apre i controlli nativi Home Assistant.</div></div>
+    </div>`;
   }
   _check(key,label,help=''){
     return `<label class="rs-e-check"><span>${rsEsc(label)}${help?`<div class="rs-e-help">${rsEsc(help)}</div>`:''}</span><input type="checkbox" data-field="${key}" ${this._config[key]?'checked':''}/></label>`;
@@ -318,15 +434,16 @@ class RoomSelectorCardEditor extends HTMLElement {
       body='<div class="rs-e-heading">Selezione ambienti</div><div class="rs-e-desc">Collega il selettore già utilizzato dalla dashboard. Le opzioni vengono lette automaticamente, senza ricreare gli ambienti.</div>'+
         this._field('Selettore ambienti (input_select / select)','selection_entity','input_select.*')+
         (options.length?'<div class="rs-e-heading">Icone degli ambienti</div><div class="rs-e-desc">Personalizza le icone MDI utilizzate dal menu. Ogni ambiente conserva il proprio nome originale.</div>'+options.map(name=>{
-          const icon=rsIcon(c.room_icons[name],rsDefaultIcon(name));return `<div class="rs-e-room"><div class="rs-e-room-title">${rsEsc(name)}</div><div class="rs-e-icon-line"><ha-icon icon="${icon}"></ha-icon><input class="rs-e-input" type="text" data-icon-name="${rsEsc(name)}" value="${icon}" placeholder="mdi:home-outline" aria-label="Icona di ${rsEsc(name)}"/></div></div>`;
+          const icon=rsIcon(c.room_icons[name],rsDefaultIcon(name));return `<div class="rs-e-room"><div class="rs-e-room-title">${rsEsc(name)}</div>${this._iconPicker('room',0,icon,name)}</div>`;
         }).join(''):'<div class="rs-e-help">Seleziona un helper con ambienti disponibili per configurare le relative icone.</div>');
     }
     if(this._tab==='indicatori'){
       body='<div class="rs-e-heading">Indicatori attivi</div><div class="rs-e-desc">Configura le entità da monitorare. Sulla card vengono mostrati soltanto gli stati attivi; nel popup trovi i relativi dettagli.</div>'+
         this._multi('lights','Luci',RS_DOMAINS.lights)+this._multi('climates','Termostati',RS_DOMAINS.climates)+
-        this._field('Allarme (facoltativo)','alarm_entity','alarm_control_panel.*')+
-        this._field('Stato lavatrice (facoltativo)','washer_entity','binary_sensor.*')+
-        this._field('Energia consumata nel mese (facoltativo)','energy_entity','sensor.*');
+        this._multi('alarms','Allarmi',RS_DOMAINS.alarms)+
+        this._multi('washers','Stati lavatrice',RS_DOMAINS.washers)+
+        this._field('Energia consumata nel mese (facoltativo)','energy_entity','sensor.*')+
+        '<div class="rs-e-heading">Indicatori personalizzati</div><div class="rs-e-desc">Ogni indicatore può monitorare più entità e aiutanti. Le icone si scelgono dal catalogo nativo Home Assistant.</div>'+this._customEditor();
     }
     if(this._tab==='aspetto'){
       const theme=`<select class="rs-e-input" data-field="theme_mode">${[['auto','Auto (Home Assistant)'],['light','Light Edera'],['dark','Dark Edera']].map(([v,label])=>`<option value="${v}" ${c.theme_mode===v?'selected':''}>${label}</option>`).join('')}</select>`;
@@ -355,19 +472,59 @@ class RoomSelectorCardEditor extends HTMLElement {
         else this._update({[key]:value});
       });slot.appendChild(selector);
     });
+    this.shadowRoot.querySelectorAll('[data-icon-selector]').forEach(slot=>{
+      const picker=document.createElement('ha-selector');picker.hass=this._hass;
+      picker.selector={icon:{}};
+      const room=slot.dataset.iconRoom;
+      const index=Number(slot.dataset.iconIndex);
+      picker.value=room?this._config.room_icons[room]||rsDefaultIcon(room):this._config.custom_indicators[index]?.icon||'mdi:information-outline';
+      picker.setAttribute('aria-label','Scegli icona dal catalogo');
+      picker.addEventListener('value-changed',e=>{
+        e.stopPropagation();
+        if(!picker.isConnected||!e.detail||!Object.prototype.hasOwnProperty.call(e.detail,'value'))return;
+        const icon=rsIcon(e.detail.value,room?rsDefaultIcon(room):'mdi:information-outline');
+        if(room)this._update({room_icons:{...this._config.room_icons,[room]:icon}});
+        else this._changeCustom(index,{icon});
+      });slot.appendChild(picker);
+    });
+    this.shadowRoot.querySelectorAll('[data-custom-add-entity]').forEach(slot=>{
+      const index=Number(slot.dataset.customAddEntity),picker=document.createElement('ha-selector');
+      picker.hass=this._hass;picker.selector={entity:{domain:RS_DOMAINS.custom_entities}};picker.value='';
+      picker.setAttribute('aria-label','Aggiungi entità all’indicatore');
+      picker.addEventListener('value-changed',e=>{
+        e.stopPropagation();
+        if(!picker.isConnected||!e.detail||!Object.prototype.hasOwnProperty.call(e.detail,'value'))return;
+        const id=rsEntity(e.detail.value,RS_DOMAINS.custom_entities);
+        const ci=this._config.custom_indicators[index];
+        if(id&&ci&&!ci.entities.includes(id))this._changeCustom(index,{entities:[...ci.entities,id]});
+      });slot.appendChild(picker);
+    });
   }
   _click(e){const b=e.target.closest('button');if(!b)return;
     if(b.dataset.tab){this._tab=b.dataset.tab;this._render();return;}
     if(b.dataset.clear){this._update({[b.dataset.clear]:''});return;}
     if(b.dataset.remove){this._update({[b.dataset.remove]:this._config[b.dataset.remove].filter(id=>id!==b.dataset.id)});return;}
+    if(b.hasAttribute('data-custom-add')){this._selectedCustom=this._config.custom_indicators.length;
+      this._update({custom_indicators:[...this._config.custom_indicators,rsCustom()]});return;}
+    if(b.hasAttribute('data-custom-select')){this._selectedCustom=Number(b.dataset.customSelect);this._render();return;}
+    if(b.hasAttribute('data-custom-delete')){const copy=[...this._config.custom_indicators];copy.splice(this._selectedCustom,1);this._selectedCustom=Math.max(0,this._selectedCustom-1);this._update({custom_indicators:copy});return;}
+    if(b.hasAttribute('data-custom-move')){const from=this._selectedCustom,to=from+Number(b.dataset.customMove);
+      if(to<0||to>=this._config.custom_indicators.length)return;
+      const arr=[...this._config.custom_indicators];[arr[from],arr[to]]=[arr[to],arr[from]];this._selectedCustom=to;this._update({custom_indicators:arr});return;}
+    if(b.hasAttribute('data-custom-remove')){const index=Number(b.dataset.customRemove),ci=this._config.custom_indicators[index];if(ci)this._changeCustom(index,{entities:ci.entities.filter(id=>id!==b.dataset.id)});return;}
   }
   _change(e){const input=e.target;const key=input.dataset.field;
-    if(input.hasAttribute('data-icon-name')){const name=input.dataset.iconName;this._update({room_icons:{...this._config.room_icons,[name]:rsIcon(input.value,rsDefaultIcon(name))}});return;}
+    if(input.dataset.iconFallback){const room=input.dataset.iconRoom;
+      if(room)this._update({room_icons:{...this._config.room_icons,[room]:rsIcon(input.value,rsDefaultIcon(room))}});
+      else this._changeCustom(Number(input.dataset.iconIndex),{icon:rsIcon(input.value,'mdi:information-outline')});return;}
+    if(input.dataset.customField){this._changeCustom(this._selectedCustom,{[input.dataset.customField]:input.value});return;}
+    if(input.hasAttribute('data-custom-entity-input')){const index=Number(input.dataset.customEntityInput),ci=this._config.custom_indicators[index];
+      const id=rsEntity(input.value,RS_DOMAINS.custom_entities);if(ci&&id&&!ci.entities.includes(id))this._changeCustom(index,{entities:[...ci.entities,id]});return;}
     if(!key)return;
     if(key==='controls_enabled'||key==='show_details_button'){this._update({[key]:input.checked});return;}
     if(key==='theme_mode'){this._update({theme_mode:input.value});return;}
     if(key==='washer_active_state'||key==='eyebrow'){this._update({[key]:input.value});return;}
-    if(key==='lights'||key==='climates'){
+    if(key==='lights'||key==='climates'||key==='alarms'||key==='washers'){
       const value=rsEntity(input.value,RS_DOMAINS[key]);if(value&&!this._config[key].includes(value))this._update({[key]:[...this._config[key],value]});return;
     }
     this._update({[key]:rsEntity(input.value,RS_DOMAINS[key])});
@@ -381,4 +538,4 @@ if(typeof window!=='undefined'){
   window.customCards=window.customCards||[];
   if(!window.customCards.some(x=>x.type===RS_TAG))window.customCards.push({type:RS_TAG,name:'Room Selector Card',description:'Selettore ambienti e indicatori attivi in stile Edera.',preview:true});
 }
-export {rsConfig,rsEntity,rsArray,rsDuration};
+export {rsConfig,rsEntity,rsArray,rsDuration,rsCustom,rsIsCustomActive};
