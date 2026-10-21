@@ -1,6 +1,7 @@
 # Room Selector Card
 
 [![TikTok | Segui](assets/tiktok-segui.svg)](https://www.tiktok.com/@luigi.regolo)
+[![Release](https://img.shields.io/github/v/release/luigi-regolo/room-selector-card?label=Release&style=flat-square)](https://github.com/luigi-regolo/room-selector-card/releases/latest)
 [![License: GPL-3.0-only](https://img.shields.io/badge/license-GPL--3.0--only-blue?style=flat-square)](LICENSE)
 [![HACS](https://img.shields.io/badge/HACS-Repository-41BDF5?style=flat-square)](https://my.home-assistant.io/redirect/hacs_repository/?owner=luigi-regolo&repository=room-selector-card&category=plugin)
 [![GitHub Stars](https://img.shields.io/github/stars/luigi-regolo/room-selector-card?style=flat-square)](https://github.com/luigi-regolo/room-selector-card/stargazers)
@@ -116,6 +117,10 @@ Unknown or unavailable device states are not treated as confirmation that a devi
 Optional alarm and lock actions require confirmation before a service call is sent. A successfully submitted command does not independently prove that a physical device has completed the requested operation.
 
 Scripts and device integrations may perform additional operations according to their own configurations. Review those operations before enabling security shortcuts.
+
+## Releases
+
+See [GitHub Releases](https://github.com/luigi-regolo/room-selector-card/releases) for published versions and release notes.
 
 ## Copyright & License
 
