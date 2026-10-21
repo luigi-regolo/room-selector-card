@@ -1,6 +1,6 @@
 /**
- * Room Selector Card — experimental Home Assistant custom dashboard card.
- * Development version: 0.1 (not a public release).
+ * Room Selector Card — Home Assistant custom dashboard card.
+ * Release version: 1.0.
  * Copyright (c) 2026 luigi-regolo. SPDX-License-Identifier: GPL-3.0-only.
  * No telemetry, external dependencies, credentials, or remote assets.
  */
