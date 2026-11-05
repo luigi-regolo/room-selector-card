@@ -1,9 +1,8 @@
 # Room Selector Card
 
-[![TikTok | Segui](assets/tiktok-segui.svg)](https://www.tiktok.com/@luigi.regolo)
+[![HACS Default](https://img.shields.io/badge/HACS-Default-41BDF5?style=flat-square)](https://my.home-assistant.io/redirect/hacs_repository/?owner=luigi-regolo&repository=room-selector-card&category=plugin)
 [![Release](https://img.shields.io/github/v/release/luigi-regolo/room-selector-card?label=Release&style=flat-square)](https://github.com/luigi-regolo/room-selector-card/releases/latest)
 [![License: GPL-3.0-only](https://img.shields.io/badge/license-GPL--3.0--only-blue?style=flat-square)](LICENSE)
-[![HACS](https://img.shields.io/badge/HACS-Repository-41BDF5?style=flat-square)](https://my.home-assistant.io/redirect/hacs_repository/?owner=luigi-regolo&repository=room-selector-card&category=plugin)
 [![GitHub Stars](https://img.shields.io/github/stars/luigi-regolo/room-selector-card?style=flat-square)](https://github.com/luigi-regolo/room-selector-card/stargazers)
 
 ## Overview
@@ -16,9 +15,15 @@ The selected room can be used by existing Home Assistant automations and dashboa
 
 ## Preview
 
-![Room Selector Card — Edera Graphite Dark preview](assets/room-selector-card-preview.png)
+| Light | Dark |
+| --- | --- |
+| ![Room Selector Card in Light mode](assets/room-selector-card-light.png) | ![Room Selector Card in Dark mode](assets/room-selector-card-dark.png) |
 
-*Room Selector Card in Edera Graphite Dark mode, showing a configured room, alarm status, and door lock status.*
+| Room menu, Dark mode | Details popup, Light mode |
+| --- | --- |
+| ![Room Selector Card room menu in Dark mode](assets/room-selector-card-menu-dark.png) | ![Room Selector Card details popup in Light mode](assets/room-selector-card-popup-light.png) |
+
+*Previews use fictional demo data. The interface text is currently in Italian.*
 
 ## Features
 
@@ -39,19 +44,29 @@ Available features depend on the configured Home Assistant entities and integrat
 
 ## Installation
 
-### HACS
+### HACS (Recommended)
 
-Install Room Selector Card using a custom HACS repository.
+Install Room Selector Card directly from the default HACS catalog.
+
+[![Open Room Selector Card in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=luigi-regolo&repository=room-selector-card&category=plugin)
 
 1. Open **HACS** in Home Assistant.
-2. Open the HACS menu and select **Custom repositories**.
-3. Enter the repository URL:
+2. Search for **Room Selector Card**.
+3. Select **Room Selector Card** from the results.
+4. Click **Download** to install the card.
+5. Reload your dashboard if necessary.
+6. Add **Room Selector Card** to your dashboard and configure it using the visual editor.
 
-   `https://github.com/luigi-regolo/room-selector-card`
+To install a specific release, use **Download** or **Redownload** and select the desired version when available.
 
-4. Select **Dashboard** as the repository type and add it.
-5. Find **Room Selector Card** in HACS and download it.
-6. Reload the dashboard if necessary, then add the card using the visual editor.
+### Alternative: Custom repository
+
+If you prefer to add the repository manually:
+
+1. Open **HACS** and select **Custom repositories** from the menu.
+2. Enter `https://github.com/luigi-regolo/room-selector-card`.
+3. Select **Dashboard** as the repository type and add it.
+4. Find **Room Selector Card** in HACS and download it.
 
 ### Manual installation
 
