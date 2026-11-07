@@ -128,10 +128,10 @@ assert.doesNotMatch(homeCard.shadowRoot.innerHTML,/Asciugatrice attiva/);
 
 assert.match(source,/\.rs-dialog-top strong\{[^}]*font-size:17px/);
 assert.match(source,/env\(safe-area-inset-top\)/);
-assert.match(source,/max-height:min\(90dvh,720px\)/);
-assert.match(source,/\.rs-details\{[^}]*padding:5px 9px/);
-assert.match(source,/\.rs-details\{[^}]*margin:12px 0 0/);
-assert.match(source,/\.rs-details ha-icon\{[^}]*width:14px/);
+assert.match(source,/max-height:min\(88dvh,680px\)/);
+assert.match(source,/\.rs-info\{/);
+assert.match(source,/\.rs-st\.na\{[^}]*border-style:dashed/);
+assert.match(source,/\.rs-row\.rs-hit\{/);
 assert.doesNotMatch(source,/this\._multi\('lights','Luci'/);
 const detailCard=new Card();
 detailCard.setConfig({alarms:['alarm_control_panel.house'],lock_entity:'lock.front',lights:['light.legacy'],climates:['climate.heating'],cooling_climates:['climate.cooling'],washers:['binary_sensor.washer'],dryers:['binary_sensor.dryer'],energy_entity:'sensor.month_energy',custom_indicators:[{name:'Deumidificatori',icon:'mdi:water',active_state:'on',entities:['switch.dehumidifier']}]});
@@ -147,7 +147,9 @@ detailCard.hass={states:{
  'switch.dehumidifier':{state:'on',attributes:{}}
 }};
 assert.doesNotMatch(detailCard.shadowRoot.innerHTML,/luce accesa|luci accese/);
-assert.match(detailCard.shadowRoot.innerHTML,/data-act="details"><ha-icon icon="mdi:information-outline"><\/ha-icon> Dettagli e stato<\/button>/);
+assert.match(detailCard.shadowRoot.innerHTML,/class="rs-info"[^>]*data-act="details"/);
+assert.match(detailCard.shadowRoot.innerHTML,/data-act="details" data-target="lock"/);
+assert.match(detailCard.shadowRoot.innerHTML,/data-act="details" data-target="washer"|data-act="details" data-target="dryer"/);
 const popupRoot={innerHTML:'',querySelector(){return null;},querySelectorAll(){return []}};
 detailCard._overlay={shadowRoot:popupRoot};detailCard._overlayMode='details';detailCard._renderOverlay();
 const popup=popupRoot.innerHTML;

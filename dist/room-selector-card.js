@@ -9,6 +9,7 @@ const RS_EDITOR = 'room-selector-card-editor';
 const RS_DEFAULTS = Object.freeze({
   type: 'custom:room-selector-card',
   eyebrow: 'SELEZIONA AMBIENTE',
+  show_eyebrow: true,
   theme_mode: 'auto',
   selection_entity: '',
   room_icons: {},
@@ -85,6 +86,7 @@ function rsConfig(raw={}) {
   return {
     ...r, type:RS_DEFAULTS.type,
     eyebrow:rsText(r.eyebrow ?? RS_DEFAULTS.eyebrow,55) || RS_DEFAULTS.eyebrow,
+    show_eyebrow:r.show_eyebrow!==false,
     theme_mode:['auto','light','dark'].includes(r.theme_mode) ? r.theme_mode:'auto',
     selection_entity:rsEntity(r.selection_entity,RS_DOMAINS.selection_entity),
     room_icons:icons,
@@ -135,35 +137,49 @@ function rsDuration(date) {
 }
 const RS_STYLE = `
 :host{display:block;min-width:0;container-type:inline-size;font-family:var(--ha-font-family-body,var(--paper-font-body1_-_font-family,Roboto,Arial,sans-serif));font-size:14px}
-*,*:before,*:after{box-sizing:border-box}button,input,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}
-.rs-card{--rs-green:#0a7156;--rs-bg:#fafbf9;--rs-text:#18221c;--rs-muted:#56675c;--rs-surface:#f0f2ef;--rs-circle:#fff;--rs-line:#e0e5df;background:var(--rs-bg);color:var(--rs-text);border:1px solid var(--rs-line);border-radius:26px;padding:18px;min-width:0;position:relative}
-.rs-card.rs-dark{--rs-green:#0e795d;--rs-bg:#101211;--rs-text:#f5f7f4;--rs-muted:#bbc5bd;--rs-surface:#191c1a;--rs-circle:#282b29;--rs-line:#2b302c}
-.rs-card.rs-light{--rs-green:#0a7156;--rs-bg:#fafbf9;--rs-text:#18221c;--rs-muted:#56675c;--rs-surface:#f0f2ef;--rs-circle:#fff;--rs-line:#e0e5df}
+*,*:before,*:after{box-sizing:border-box}button,input,select{font:inherit}button{cursor:pointer;color:inherit}button:disabled{opacity:.5;cursor:not-allowed}
+.rs-card{--rs-green:#0a7156;--rs-bg:#fafbf9;--rs-text:#18221c;--rs-muted:#56675c;--rs-surface:#f0f2ef;--rs-circle:#fff;--rs-line:#e0e5df;--rs-btn:#0a7156;--rs-ok:#0a8f6c;--rs-warn:#c98a1d;--rs-crit:#cf4f4b;--rs-na:#7a877f;background:var(--rs-bg);color:var(--rs-text);border:1px solid var(--rs-line);border-radius:26px;padding:18px;min-width:0;position:relative}
+.rs-card.rs-dark{--rs-green:#0e795d;--rs-bg:#101211;--rs-text:#f5f7f4;--rs-muted:#bbc5bd;--rs-surface:#191c1a;--rs-circle:#282b29;--rs-line:#2b302c;--rs-btn:#f5f7f4;--rs-ok:#2fc79b;--rs-warn:#e0b050;--rs-crit:#e5726d;--rs-na:#8d9a92}
+.rs-card.rs-light{--rs-green:#0a7156;--rs-bg:#fafbf9;--rs-text:#18221c;--rs-muted:#56675c;--rs-surface:#f0f2ef;--rs-circle:#fff;--rs-line:#e0e5df;--rs-btn:#0a7156;--rs-ok:#0a8f6c;--rs-warn:#c98a1d;--rs-crit:#cf4f4b;--rs-na:#7a877f}
 .rs-header{display:flex;gap:12px;justify-content:space-between;align-items:center;min-width:0;margin:2px 4px 0}.rs-headtext{min-width:0}.rs-eyebrow{font-size:10px;letter-spacing:1.7px;font-weight:750;color:var(--rs-muted);margin:0 0 7px;text-transform:uppercase;line-height:1.1}
 .rs-title{font-size:clamp(23px,5.8cqw,25px);font-weight:780;line-height:1.14;margin:0;min-width:0;overflow-wrap:anywhere;letter-spacing:-.7px}.rs-dot{color:var(--rs-green)}
-.rs-toggle{background:var(--rs-green);color:#fff;border:0;min-width:42px;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;cursor:pointer;flex:none}.rs-toggle ha-icon{--mdc-icon-size:21px}
-.rs-toggle:focus-visible,.rs-chip:focus-visible,.rs-details:focus-visible{outline:2px solid var(--rs-green);outline-offset:3px}
-.rs-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px}
-.rs-chip{border:1px solid var(--rs-line);background:var(--rs-surface);color:var(--rs-text);border-radius:14px;padding:9px 11px;min-height:40px;display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600;max-width:100%;white-space:normal;text-align:left}
-.rs-chip ha-icon{--mdc-icon-size:18px;flex:none}.rs-chip.light ha-icon{color:#e4b24d}.rs-chip.climate ha-icon{color:#eb9654}.rs-chip.alarm ha-icon{color:#0b9b77}.rs-chip.alarm-critical ha-icon{color:#db6867}.rs-chip.washer ha-icon{color:#87a7ba}.rs-chip.dryer ha-icon{color:#87a7ba}.rs-chip.cooling ha-icon{color:#7caadd}.rs-chip.alarm-off ha-icon,.rs-chip.lock-unknown ha-icon{color:var(--rs-muted)}.rs-chip.lock-locked ha-icon{color:#0b9b77}.rs-chip.lock-unlocked ha-icon,.rs-chip.lock-moving ha-icon{color:#dcaa55}.rs-chip.lock-critical ha-icon{color:#db6867}.rs-chip.custom ha-icon{color:var(--rs-green)}
-.rs-bottom{display:flex;justify-content:flex-start}.rs-details{display:inline-flex;align-items:center;justify-content:center;vertical-align:top;gap:5px;border:0;border-radius:999px;color:#fff;background:var(--rs-green);padding:5px 9px;margin:12px 0 0;font-family:inherit;font-size:11px;font-weight:650;line-height:1.2;cursor:pointer;white-space:nowrap}
-.rs-details ha-icon{display:block;flex:none;margin:0;--mdc-icon-size:14px;width:14px;height:14px;color:inherit}.rs-notice{font-size:12px;color:var(--rs-muted);margin:13px 4px 0;line-height:1.45}.rs-error{font-size:12px;color:var(--error-color,#d86d60);margin-top:10px;overflow-wrap:anywhere}
-@container(max-width:360px){.rs-card{padding:13px;border-radius:23px}.rs-title{font-size:23px}.rs-chips{gap:6px;margin-top:12px}.rs-chip{font-size:11px;padding:7px 9px;min-height:36px}.rs-toggle{min-width:38px;width:38px;height:38px}}
-@media(prefers-reduced-motion:reduce){.rs-toggle,.rs-chip,.rs-details{transition:none!important}}
+.rs-actions{display:flex;gap:8px;flex:none}
+.rs-toggle,.rs-info{min-width:42px;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;cursor:pointer;flex:none;padding:0}
+.rs-toggle{background:var(--rs-green);color:#fff;border:0}
+.rs-info{color:var(--rs-btn);border:1px solid color-mix(in srgb,var(--rs-green) 45%,transparent);background:color-mix(in srgb,var(--rs-green) 12%,transparent)}
+.rs-info:hover{background:color-mix(in srgb,var(--rs-green) 22%,transparent)}
+.rs-toggle ha-icon,.rs-info ha-icon{--mdc-icon-size:21px}
+.rs-toggle:focus-visible,.rs-info:focus-visible,.rs-st:focus-visible,.rs-dv:focus-visible{outline:2px solid var(--rs-green);outline-offset:3px}
+.rs-bar{display:flex;align-items:center;gap:8px;margin:15px 4px 2px;flex-wrap:wrap}
+.rs-st,.rs-dv{position:relative;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;padding:0;border:1px solid var(--rs-line);background:var(--rs-surface);color:var(--rs-text);flex:none}
+.rs-st ha-icon,.rs-dv ha-icon{--mdc-icon-size:20px}
+.rs-st.ok{color:var(--rs-ok);border-color:color-mix(in srgb,var(--rs-ok) 55%,transparent);background:color-mix(in srgb,var(--rs-ok) 15%,transparent)}
+.rs-st.warn{color:var(--rs-warn);border-color:color-mix(in srgb,var(--rs-warn) 60%,transparent);background:color-mix(in srgb,var(--rs-warn) 16%,transparent)}
+.rs-st.crit{color:var(--rs-crit);border-color:color-mix(in srgb,var(--rs-crit) 60%,transparent);background:color-mix(in srgb,var(--rs-crit) 16%,transparent)}
+.rs-st.idle{color:var(--rs-muted)}
+.rs-st.na{color:var(--rs-na);border-style:dashed;background:transparent}
+.rs-dv.climate ha-icon{color:#eb9654}.rs-dv.cooling ha-icon{color:#7caadd}.rs-dv.washer ha-icon,.rs-dv.dryer ha-icon{color:#87a7ba}.rs-dv.custom ha-icon{color:var(--rs-green)}
+.rs-dv em{position:absolute;top:-4px;right:-4px;min-width:17px;height:17px;border-radius:9px;background:var(--rs-green);color:#fff;font-size:10px;font-style:normal;font-weight:700;display:grid;place-items:center;padding:0 4px;line-height:1}
+.rs-sep{width:1px;height:22px;background:var(--rs-line);margin:0 2px}
+.rs-notice{font-size:12px;color:var(--rs-muted);margin:13px 4px 0;line-height:1.45}.rs-error{font-size:12px;color:var(--error-color,#d86d60);margin-top:10px;overflow-wrap:anywhere}
+@container(max-width:360px){.rs-card{padding:13px;border-radius:23px}.rs-title{font-size:23px}.rs-bar{gap:6px;margin-top:12px}.rs-st,.rs-dv{width:38px;height:38px}.rs-toggle,.rs-info{min-width:38px;width:38px;height:38px}}
+@media(prefers-reduced-motion:reduce){.rs-toggle,.rs-info,.rs-st,.rs-dv{transition:none!important}}
 `;
 const RS_OVERLAY_STYLE = `
 :host{font-family:var(--ha-font-family-body,var(--paper-font-body1_-_font-family,Roboto,Arial,sans-serif));font-size:14px}
 *,*:before,*:after{box-sizing:border-box}button{font:inherit;cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}
-.rs-layer{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));box-sizing:border-box;background:#0009;overscroll-behavior:contain;pointer-events:auto}
+.rs-layer{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));box-sizing:border-box;background:#0009;overflow:hidden;overscroll-behavior:none;pointer-events:auto}
 .rs-layer.menu-layer{background:transparent;pointer-events:auto;align-items:initial;justify-content:initial;padding:0}
 .rs-panel,.rs-menu{--rs-green:#0a7156;--rs-bg:#fafbf9;--rs-text:#18221c;--rs-muted:#56675c;--rs-surface:#f0f2ef;--rs-circle:#fff;--rs-line:#e0e5df;background:var(--rs-bg);color:var(--rs-text);border:1px solid var(--rs-line);border-radius:26px;box-shadow:0 18px 60px #0005;min-width:0}
 .rs-panel.rs-dark,.rs-menu.rs-dark{--rs-green:#0e795d;--rs-bg:#101211;--rs-text:#f5f7f4;--rs-muted:#bbc5bd;--rs-surface:#191c1a;--rs-circle:#282b29;--rs-line:#2b302c}
 .rs-panel.rs-light,.rs-menu.rs-light{--rs-green:#0a7156;--rs-bg:#fafbf9;--rs-text:#18221c;--rs-muted:#56675c;--rs-surface:#f0f2ef;--rs-circle:#fff;--rs-line:#e0e5df}
-.rs-panel{width:min(390px,100%);max-height:min(90vh,720px);max-height:min(90dvh,720px);display:flex;flex-direction:column;overflow:hidden;padding:20px}
-.rs-dialog-top{display:flex;align-items:center;gap:10px;min-height:38px;margin:0 0 12px;background:var(--rs-bg);flex:none}.rs-dialog-top strong{flex:1;min-width:0;font-size:17px;font-weight:600;line-height:1.3;overflow-wrap:anywhere}
-.rs-x{width:36px;height:36px;flex:none;display:grid;place-items:center;border-radius:50%;background:var(--rs-surface);border:0;color:var(--rs-text);padding:0}.rs-x ha-icon{--mdc-icon-size:18px}
-.rs-dialog-body{padding:0 2px 2px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;min-height:0;-webkit-overflow-scrolling:touch;scrollbar-gutter:stable}
+.rs-panel{width:min(390px,100%);max-width:100%;max-height:min(88vh,680px);max-height:min(88dvh,680px);display:flex;flex-direction:column;overflow:hidden;overscroll-behavior:contain;padding:0}
+.rs-dialog-top{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:62px;padding:16px 16px 12px 18px;flex:none;background:var(--rs-bg);border-bottom:1px solid var(--rs-line)}.rs-dialog-top strong{flex:1;min-width:0;font-size:17px;font-weight:600;line-height:1.3;overflow-wrap:anywhere}
+.rs-x{width:40px;height:40px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--rs-surface);border:1px solid var(--rs-line);color:var(--rs-text);padding:0;line-height:0}.rs-x ha-icon{display:block;--mdc-icon-size:18px;width:18px;height:18px}
+.rs-dialog-body{padding:12px 18px 18px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;min-height:0;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 .rs-row{display:flex;align-items:center;gap:10px;background:var(--rs-surface);border:1px solid var(--rs-line);padding:11px 12px;border-radius:14px;min-width:0;margin:0 0 9px;min-height:66px}
+.rs-row.rs-hit{border-color:var(--rs-green);background:color-mix(in srgb,var(--rs-green) 10%,var(--rs-surface))}
+@media(prefers-reduced-motion:no-preference){.rs-row{transition:border-color .25s,background .25s}}
 .rs-row-icon{width:38px;height:38px;display:grid;place-items:center;flex:none;border-radius:50%;color:var(--rs-text);background:var(--rs-circle)}.rs-row-icon ha-icon{--mdc-icon-size:20px}.rs-custom-items{margin:0 0 12px 14px;padding-left:10px;border-left:2px solid var(--rs-line)}.rs-custom-item{display:flex;align-items:center;gap:9px;padding:7px 0;font-size:12px}.rs-custom-item span{flex:1;overflow-wrap:anywhere}.rs-custom-item button{font:inherit;font-size:12px;padding:6px 9px;border:1px solid var(--rs-line);border-radius:9px;background:var(--rs-surface);color:var(--rs-text);cursor:pointer}
 .rs-row-txt{flex:1;min-width:0}.rs-row-title{font-size:13px;font-weight:650}.rs-row-desc{font-size:12px;color:var(--rs-muted);margin-top:3px;overflow-wrap:anywhere}.rs-row button{border:1px solid var(--rs-line);border-radius:999px;color:var(--rs-text);background:var(--rs-circle);padding:8px 10px;font-size:11px;min-height:32px;white-space:nowrap;flex:none}
 .rs-row.rs-row-action{display:block}.rs-row-main{display:flex;align-items:center;gap:10px;min-width:0}.rs-row-shortcut{border-top:1px solid var(--rs-line);margin-top:9px;padding-top:9px;display:flex;align-items:center;justify-content:space-between;gap:10px}.rs-row-shortcut span{font-size:12px;color:var(--rs-muted);min-width:0}.rs-row-shortcut button{min-height:30px;padding:6px 12px;background:var(--rs-green);color:#fff;border:0}.rs-row-shortcut button:focus-visible{outline:2px solid var(--rs-green);outline-offset:2px}
@@ -171,8 +187,10 @@ const RS_OVERLAY_STYLE = `
 .rs-menu{position:fixed;max-height:min(460px,calc(100dvh - 20px));overflow-y:auto;overflow-x:hidden;min-width:220px;max-width:calc(100vw - 16px);padding:8px;border-radius:18px;box-shadow:0 18px 60px #0009}
 .rs-menu button{font-size:13px;border:0;color:var(--rs-text);background:transparent;display:flex;align-items:center;gap:11px;min-height:46px;width:100%;border-radius:12px;padding:8px 12px;text-align:left}.rs-menu button[aria-current=true]{background:var(--rs-green);color:#fff}.rs-menu button span{flex:1;overflow-wrap:anywhere}.rs-menu ha-icon{--mdc-icon-size:20px;flex:none}
 .rs-menu button:focus-visible,.rs-x:focus-visible,.rs-row button:focus-visible,.rs-confirm-actions button:focus-visible{outline:2px solid var(--rs-green);outline-offset:2px}
-@media(max-width:420px){.rs-panel{padding:14px;border-radius:23px;width:min(390px,100%)}.rs-row{gap:8px;padding:10px}.rs-row-icon{width:34px;height:34px}.rs-row button{font-size:10px}}
+@media(max-width:420px){.rs-panel{border-radius:23px}.rs-dialog-top{padding:14px 14px 10px 16px}.rs-dialog-body{padding:10px 14px 14px}.rs-row{gap:8px;padding:10px}.rs-row-icon{width:34px;height:34px}.rs-row button{font-size:10px}}
+@media(max-height:480px){.rs-panel{max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px)}}
 `;
+const rsOfTotal=(n,t)=>t===1?(n?'1 attivo':'Non attivo'):`${n} di ${t} attivi`;
 class RoomSelectorCard extends HTMLElement {
   static getStubConfig(){return rsConfig();}
   static getConfigElement(){return document.createElement(RS_EDITOR);}
@@ -181,8 +199,13 @@ class RoomSelectorCard extends HTMLElement {
     this._clockTimer=null;this._sig='';this._overlaySig='';this._overlay=null;this._overlayMode='';this._confirm='';this._busy=false;this._error='';this._feedback='';this._sentActions=new Set();this._returnFocus=null;
     this._onCardClick=e=>this._cardClick(e);this.shadowRoot.addEventListener('click',this._onCardClick);
     this._outside=e=>{if(e.target===this._overlay)this._closeOverlay();};
-    this._escape=e=>{if(!this._overlay)return;if(e.key==='Escape'){e.preventDefault();this._closeOverlay();return;}if(e.key==='Tab'&&this._overlayMode==='details'){const buttons=[...this._overlay.shadowRoot.querySelectorAll('button:not([disabled])')];if(!buttons.length)return;const active=this._overlay.shadowRoot.activeElement;const index=buttons.indexOf(active);if(e.shiftKey && (index<=0)){e.preventDefault();buttons[buttons.length-1].focus();}else if(!e.shiftKey && index===buttons.length-1){e.preventDefault();buttons[0].focus();}}};
+    this._escape=e=>{if(!this._overlay)return;if(e.key==='Escape'){e.preventDefault();this._closeOverlay();return;}const scrollKeys={ArrowUp:-48,ArrowDown:48,PageUp:-320,PageDown:320,Home:-1e5,End:1e5};if(this._overlayMode==='details'&&(e.key in scrollKeys||(e.key===' '&&!this._overlay.shadowRoot.activeElement?.matches?.('button')))){e.preventDefault();const sc=this._overlay.shadowRoot.querySelector('.rs-dialog-body');if(sc&&e.key in scrollKeys)sc.scrollTop+=scrollKeys[e.key];return;}if(e.key==='Tab'&&this._overlayMode==='details'){const buttons=[...this._overlay.shadowRoot.querySelectorAll('button:not([disabled])')];if(!buttons.length)return;const active=this._overlay.shadowRoot.activeElement;const index=buttons.indexOf(active);if(e.shiftKey && (index<=0)){e.preventDefault();buttons[buttons.length-1].focus();}else if(!e.shiftKey && index===buttons.length-1){e.preventDefault();buttons[0].focus();}}};
     this._onMove=()=>{if(this._overlayMode==='menu')this._positionMenu();};
+    // Modal scroll protection: while the details popup is open, the page and the card behind it never scroll.
+    this._modalLock=false;this._modalTouch={x:0,y:0};
+    this._touchStart=e=>{if(e.touches?.length===1)this._modalTouch={x:e.touches[0].clientX,y:e.touches[0].clientY};};
+    this._touchMove=e=>{if(e.touches?.length!==1)return;const t=e.touches[0],dy=this._modalTouch.y-t.clientY,dx=this._modalTouch.x-t.clientX;this._protectScroll(e,dy,Math.abs(dx)>Math.abs(dy));this._modalTouch={x:t.clientX,y:t.clientY};};
+    this._wheel=e=>this._protectScroll(e,e.deltaY,Math.abs(e.deltaX)>Math.abs(e.deltaY));
   }
   connectedCallback(){this._render();this._syncClock();}
   disconnectedCallback(){this._stopClock();this._closeOverlay();}
@@ -208,24 +231,24 @@ class RoomSelectorCard extends HTMLElement {
   _timeValue(id){const e=this._state(id);if(!rsKnown(e))return '';const value=rsText(e.state,80),unit=rsText(e.attributes?.unit_of_measurement||'',18);return value+(unit&&!value.endsWith(unit)?' '+unit:'');}
   _alarmInfo(){
  const c=this._config,a=this._active();
- if(!c.alarms.length)return {label:'Allarme da configurare',kind:'alarm-off',icon:'mdi:shield-outline'};
+ if(!c.alarms.length)return {label:'Allarme da configurare',kind:'na',icon:'mdi:shield-outline'};
  const rows=c.alarms.map(id=>this._state(id));
- if(rows.some(e=>e?.state==='triggered'))return {label:'Allarme in corso',kind:'alarm-critical',icon:'mdi:shield-alert-outline'};
- if(rows.some(e=>e?.state==='arming'||e?.state==='pending'))return {label:'Allarme in transizione',kind:'alarm-critical',icon:'mdi:shield-alert-outline'};
- if(a.alarms.length)return {label:a.alarms.length===1?'Allarme inserito':a.alarms.length+' allarmi inseriti',kind:'alarm',icon:'mdi:shield-lock-outline'};
- if(rows.every(e=>e?.state==='disarmed'))return {label:'Allarme disinserito',kind:'alarm-off',icon:'mdi:shield-off-outline'};
- return {label:'Allarme non disponibile',kind:'alarm-off',icon:'mdi:shield-outline'};
+ if(rows.some(e=>e?.state==='triggered'))return {label:'Allarme in corso',kind:'crit',icon:'mdi:shield-alert-outline'};
+ if(rows.some(e=>e?.state==='arming'||e?.state==='pending'))return {label:'Allarme in transizione',kind:'warn',icon:'mdi:shield-sync-outline'};
+ if(a.alarms.length)return {label:a.alarms.length===1?'Allarme inserito':a.alarms.length+' allarmi inseriti',kind:'ok',icon:'mdi:shield-lock-outline'};
+ if(rows.every(e=>e?.state==='disarmed'))return {label:'Allarme disinserito',kind:'idle',icon:'mdi:shield-off-outline'};
+ return {label:'Allarme non disponibile',kind:'na',icon:'mdi:shield-outline'};
 }
   _lockInfo(){
  const id=this._config.lock_entity,e=this._state(id);
- if(!id)return {label:'Serratura da configurare',kind:'lock-unknown',icon:'mdi:lock-question'};
- if(!rsKnown(e))return {label:'Serratura non disponibile',kind:'lock-unknown',icon:'mdi:lock-question'};
- if(e.state==='locked')return {label:'Porta bloccata',kind:'lock-locked',icon:'mdi:lock-outline'};
- if(e.state==='unlocked')return {label:'Porta sbloccata',kind:'lock-unlocked',icon:'mdi:lock-open-outline'};
- if(e.state==='locking'||e.state==='unlocking')return {label:'Serratura in movimento',kind:'lock-moving',icon:'mdi:lock-clock'};
- if(e.state==='jammed')return {label:'Serratura inceppata',kind:'lock-critical',icon:'mdi:lock-alert-outline'};
- if(e.state==='open')return {label:'Porta aperta',kind:'lock-unlocked',icon:'mdi:door-open'};
- return {label:'Stato serratura: '+rsText(e.state,30),kind:'lock-unknown',icon:'mdi:lock-question'};
+ if(!id)return {label:'Serratura da configurare',kind:'na',icon:'mdi:lock-question'};
+ if(!rsKnown(e))return {label:'Serratura non disponibile',kind:'na',icon:'mdi:lock-question'};
+ if(e.state==='locked')return {label:'Porta bloccata',kind:'ok',icon:'mdi:lock-outline'};
+ if(e.state==='unlocked')return {label:'Porta sbloccata',kind:'warn',icon:'mdi:lock-open-outline'};
+ if(e.state==='locking'||e.state==='unlocking')return {label:'Serratura in movimento',kind:'warn',icon:'mdi:lock-clock'};
+ if(e.state==='jammed')return {label:'Serratura inceppata',kind:'crit',icon:'mdi:lock-alert-outline'};
+ if(e.state==='open')return {label:'Porta aperta',kind:'warn',icon:'mdi:door-open'};
+ return {label:'Stato serratura: '+rsText(e.state,30),kind:'na',icon:'mdi:lock-question'};
 }
   _stopClock(){if(this._clockTimer!=null){window.clearInterval?.(this._clockTimer);this._clockTimer=null;}}
   _syncClock(){
@@ -254,41 +277,70 @@ class RoomSelectorCard extends HTMLElement {
     if(!this.isConnected)return;
     const sign=this._signature();if(sign===this._sig)return;this._sig=sign;
 
-  const a=this._active(),chips=[this._alarmInfo(),this._lockInfo()];
-  if(a.climates.length)chips.push({kind:'climate',icon:'mdi:radiator',label:`${a.climates.length} ${a.climates.length===1?'termosifone attivo':'termosifoni attivi'}`});
-  if(a.cooling.length)chips.push({kind:'cooling',icon:'mdi:air-conditioner',label:a.cooling.length===1?'Climatizzatore attivo':`${a.cooling.length} climatizzatori attivi`});
-  if(a.washers.length)chips.push({kind:'washer',icon:'mdi:washing-machine',label:a.washers.length===1?'Lavatrice attiva':`${a.washers.length} lavatrici attive`});
-  if(a.dryers.length)chips.push({kind:'dryer',icon:'mdi:tumble-dryer',label:a.dryers.length===1?'Asciugatrice attiva':`${a.dryers.length} asciugatrici attive`});
+  const a=this._active(),c=this._config,states=[{...this._alarmInfo(),target:'alarm'},{...this._lockInfo(),target:'lock'}],devices=[];
+  if(a.climates.length)devices.push({kind:'climate',target:'climate',icon:'mdi:radiator',count:a.climates.length,label:`${a.climates.length} ${a.climates.length===1?'termosifone attivo':'termosifoni attivi'}`});
+  if(a.cooling.length)devices.push({kind:'cooling',target:'cooling',icon:'mdi:air-conditioner',count:a.cooling.length,label:a.cooling.length===1?'Climatizzatore attivo':`${a.cooling.length} climatizzatori attivi`});
+  if(a.washers.length)devices.push({kind:'washer',target:'washer',icon:'mdi:washing-machine',count:a.washers.length,label:a.washers.length===1?'Lavatrice attiva':`${a.washers.length} lavatrici attive`});
+  if(a.dryers.length)devices.push({kind:'dryer',target:'dryer',icon:'mdi:tumble-dryer',count:a.dryers.length,label:a.dryers.length===1?'Asciugatrice attiva':`${a.dryers.length} asciugatrici attive`});
   for(const group of a.custom){
-    if(group.active.length)chips.push({kind:'custom',icon:group.indicator.icon,label:group.active.length===1?group.indicator.name:`${group.indicator.name} · ${group.active.length} attivi`});
+    if(group.active.length)devices.push({kind:'custom',target:'custom-'+group.index,icon:group.indicator.icon,count:group.active.length,label:group.active.length===1?group.indicator.name:`${group.indicator.name} · ${group.active.length} attivi`});
   }
 
-    const room=this._current();const missing=!this._config.selection_entity || !this._state(this._config.selection_entity);
+    const room=this._current();const missing=!c.selection_entity || !this._state(c.selection_entity);
+    const stBtn=v=>`<button type="button" class="rs-st ${v.kind}" data-act="details" data-target="${rsEsc(v.target||'')}" aria-haspopup="dialog" aria-label="${rsEsc(v.label)}" title="${rsEsc(v.label)}"><ha-icon icon="${rsIcon(v.icon)}"></ha-icon></button>`;
+    const dvBtn=v=>`<button type="button" class="rs-dv ${v.kind}" data-act="details" data-target="${rsEsc(v.target||'')}" aria-haspopup="dialog" aria-label="${rsEsc(v.label)}" title="${rsEsc(v.label)}"><ha-icon icon="${rsIcon(v.icon)}"></ha-icon>${v.count>1?`<em aria-hidden="true">${v.count}</em>`:''}</button>`;
     this.shadowRoot.innerHTML=`<style>${RS_STYLE}</style><div class="rs-card ${this._palette()}">
-      <div class="rs-header"><div class="rs-headtext"><p class="rs-eyebrow">${rsEsc(this._config.eyebrow)}</p><h2 class="rs-title">${rsEsc(room||'Seleziona ambiente')}<span class="rs-dot">.</span></h2></div>
-      <button type="button" class="rs-toggle" data-act="menu" aria-label="Apri selettore ambienti" aria-expanded="${this._overlayMode==='menu'}" ${!this._options().length?'disabled':''}><ha-icon icon="mdi:chevron-down"></ha-icon></button></div>
-      <div class="rs-chips">${chips.map(v=>`<button type="button" class="rs-chip ${v.kind}" data-act="details" aria-label="Dettagli: ${rsEsc(v.label)}"><ha-icon icon="${v.icon}"></ha-icon>${rsEsc(v.label)}</button>`).join('')}</div>
-      ${this._config.show_details_button?`<div class="rs-bottom"><button type="button" class="rs-details" data-act="details"><ha-icon icon="mdi:information-outline"></ha-icon> Dettagli e stato</button></div>`:''}
+      <div class="rs-header"><div class="rs-headtext">${c.show_eyebrow?`<p class="rs-eyebrow">${rsEsc(c.eyebrow)}</p>`:''}<h2 class="rs-title">${rsEsc(room||'Seleziona ambiente')}<span class="rs-dot">.</span></h2></div>
+      <div class="rs-actions">${c.show_details_button?`<button type="button" class="rs-info" data-act="details" aria-haspopup="dialog" aria-label="Dettagli e stato" title="Dettagli e stato"><ha-icon icon="mdi:information-outline"></ha-icon></button>`:''}<button type="button" class="rs-toggle" data-act="menu" aria-label="Apri selettore ambienti" aria-expanded="${this._overlayMode==='menu'}" ${!this._options().length?'disabled':''}><ha-icon icon="mdi:chevron-down"></ha-icon></button></div></div>
+      <div class="rs-bar" role="group" aria-label="Stato della casa">${states.map(stBtn).join('')}${devices.length?'<span class="rs-sep" aria-hidden="true"></span>'+devices.map(dvBtn).join(''):''}</div>
       ${missing?'<div class="rs-notice">Seleziona un’entità input_select o select nell’editor visuale.</div>':''}
       ${this._error?`<div class="rs-error" role="alert">${rsEsc(this._error)}</div>`:''}
     </div>`;
   }
-  _cardClick(e){const b=e.target.closest('[data-act]');if(!b)return;const act=b.dataset.act;if(act==='menu')this._openOverlay('menu');if(act==='details')this._openOverlay('details');}
-  _openOverlay(mode){
+  _cardClick(e){const b=e.target.closest('[data-act]');if(!b)return;const act=b.dataset.act;if(act==='menu')this._openOverlay('menu');if(act==='details')this._openOverlay('details',b.dataset.target||'');}
+  _openOverlay(mode,target=''){
     this._returnFocus=this.shadowRoot.activeElement;this._closeOverlay(false);this._overlayMode=mode;this._confirm='';this._error='';this._feedback='';this._sentActions.clear();
     const host=document.createElement('div');host.style.cssText='position:fixed;inset:0;z-index:9999;pointer-events:none;';
     host.attachShadow({mode:'open'});this._overlay=host;document.body.appendChild(host);
     host.shadowRoot.addEventListener('click',e=>this._overlayClick(e));
     document.addEventListener('keydown',this._escape,true);
+    this._lock(mode==='details');
     if(mode==='menu'){window.addEventListener('resize',this._onMove);window.addEventListener('scroll',this._onMove,true);}
     this._renderOverlay();
-    this._overlay.shadowRoot.querySelector('[data-focus]')?.focus();
+    if(mode==='details')this._reveal(target);
+    this._overlay.shadowRoot.querySelector('[data-focus]')?.focus({preventScroll:true});
     this._render();
   }
   _closeOverlay(restoreFocus=true){
     document.removeEventListener('keydown',this._escape,true);
+    this._lock(false);clearTimeout(this._hitTimer);this._hit='';
     window.removeEventListener('resize',this._onMove);window.removeEventListener('scroll',this._onMove,true);
-    const old=this._overlay;this._overlay=null;this._overlayMode='';this._confirm='';if(old){old.remove();this._render();if(restoreFocus && this._returnFocus?.isConnected)this._returnFocus.focus();}
+    const old=this._overlay;this._overlay=null;this._overlayMode='';this._confirm='';if(old){old.remove();this._render();if(restoreFocus){const t=this._returnFocus?.isConnected?this._returnFocus:this.shadowRoot.querySelector('[data-act="details"]');t?.focus?.({preventScroll:true});}}
+  }
+  _reveal(target){
+    // Opens the popup on the row matching the tapped icon: only the popup body scrolls, never the page.
+    clearTimeout(this._hitTimer);this._hit='';
+    const key=String(target||'').replace(/[^a-z0-9-]/gi,'');
+    const root=this._overlay?.shadowRoot,body=root?.querySelector?.('.rs-dialog-body'),row=key&&root?.querySelector?.(`[data-row="${key}"]`);
+    if(!body||!row)return;
+    body.scrollTop+=row.getBoundingClientRect().top-body.getBoundingClientRect().top-10;
+    this._hit=key;row.classList.add('rs-hit');
+    this._hitTimer=setTimeout(()=>{this._hit='';this._overlay?.shadowRoot?.querySelector?.('.rs-hit')?.classList.remove('rs-hit');},2600);
+  }
+  _lock(enable){
+    if(enable===this._modalLock)return;
+    this._modalLock=enable;
+    const method=enable?'addEventListener':'removeEventListener';
+    document[method]('touchstart',this._touchStart,true);
+    document[method]('touchmove',this._touchMove,{capture:true,passive:false});
+    document[method]('wheel',this._wheel,{capture:true,passive:false});
+  }
+  _protectScroll(event,delta,horizontal=false){
+    if(this._overlayMode!=='details'||!this._overlay||!event.cancelable)return;
+    const inner=this._overlay.shadowRoot.querySelector('.rs-dialog-body');
+    if(!inner||!event.composedPath().includes(inner)){event.preventDefault();return;}
+    const max=Math.max(0,inner.scrollHeight-inner.clientHeight);
+    if(horizontal||max<1||(delta<0&&inner.scrollTop<=1)||(delta>0&&inner.scrollTop>=max-1))event.preventDefault();
   }
   _positionMenu(){
     const anchor=this.shadowRoot.querySelector('.rs-toggle');const menu=this._overlay?.shadowRoot.querySelector('.rs-menu');if(!anchor||!menu)return;
@@ -311,11 +363,11 @@ class RoomSelectorCard extends HTMLElement {
  if(domain==='script')return this._state(action)?.state==='off';
  return false;
 }
-  _detailRow(title,desc,icon,entity='',action='',quickAction='',quickTitle=''){
+  _detailRow(title,desc,icon,entity='',action='',quickAction='',quickTitle='',key=''){
  const item=`<div class="rs-row-icon"><ha-icon icon="${rsIcon(icon)}"></ha-icon></div>
    <div class="rs-row-txt"><div class="rs-row-title">${rsEsc(title)}</div><div class="rs-row-desc">${rsEsc(desc)}</div></div>
    ${action?`<button type="button" data-action="${rsEsc(action)}">${action==='lights-off'||action==='climates-off'?'Spegni':'Gestisci'}</button>`:entity?`<button type="button" data-more="${rsEsc(entity)}">Gestisci</button>`:''}`;
- return `<div class="rs-row ${quickAction?'rs-row-action':''}">${quickAction?`<div class="rs-row-main">${item}</div><div class="rs-row-shortcut"><span>${rsEsc(quickTitle)}</span><button type="button" data-action="${rsEsc(quickAction)}" aria-label="${rsEsc(quickTitle)}">Attiva</button></div>`:item}</div>`;
+ return `<div class="rs-row ${quickAction?'rs-row-action':''}"${key?` data-row="${rsEsc(key)}"`:''}>${quickAction?`<div class="rs-row-main">${item}</div><div class="rs-row-shortcut"><span>${rsEsc(quickTitle)}</span><button type="button" data-action="${rsEsc(quickAction)}" aria-label="${rsEsc(quickTitle)}">Attiva</button></div>`:item}</div>`;
 }
   _renderOverlay(){
  if(!this._overlay)return;
@@ -346,36 +398,36 @@ class RoomSelectorCard extends HTMLElement {
      }else state='Stato: '+rsText(e.state,40);
    }
    rows.push(this._detailRow(c.alarms.length>1?(e?.attributes?.friendly_name||id):'Allarme',state,
-     !available?'mdi:shield-outline':e.state==='triggered'?'mdi:shield-alert-outline':armed?'mdi:shield-lock-outline':'mdi:shield-off-outline',id,'',id===c.alarms[0]&&this._canArmAway()?'arm-away':'','Modalità fuori casa'));
+     !available?'mdi:shield-outline':e.state==='triggered'?'mdi:shield-alert-outline':armed?'mdi:shield-lock-outline':'mdi:shield-off-outline',id,'',id===c.alarms[0]&&this._canArmAway()?'arm-away':'','Modalità fuori casa','alarm'));
  }
  const lock=this._lockInfo();
- rows.push(this._detailRow('Serratura',lock.label,lock.icon,c.lock_entity,'',this._canLockDoor()?'lock-door':'','Blocca porta'));
+ rows.push(this._detailRow('Serratura',lock.label,lock.icon,c.lock_entity,'',this._canLockDoor()?'lock-door':'','Blocca porta','lock'));
  if(c.climates.length){
    const time=a.climates.length?this._timeValue(c.heating_time_entity):'';
-   rows.push(this._detailRow('Termosifoni',`${a.climates.length} di ${c.climates.length} attivi${time?' · Tempo: '+time:''}`,'mdi:radiator'));
+   rows.push(this._detailRow('Termosifoni',`${rsOfTotal(a.climates.length,c.climates.length)}${time?' · Tempo: '+time:''}`,'mdi:radiator','','','','','climate'));
  }
  if(c.cooling_climates.length){
    const time=a.cooling.length?this._timeValue(c.cooling_time_entity):'';
-   rows.push(this._detailRow('Climatizzazione',`${a.cooling.length} di ${c.cooling_climates.length} attivi${time?' · Tempo: '+time:''}`,'mdi:air-conditioner'));
+   rows.push(this._detailRow('Climatizzazione',`${rsOfTotal(a.cooling.length,c.cooling_climates.length)}${time?' · Tempo: '+time:''}`,'mdi:air-conditioner','','','','','cooling'));
  }
  for(const id of c.washers){
    const e=this._state(id),active=a.washers.includes(id),time=active?this._timeValue(c.washer_time_entity):'';
    rows.push(this._detailRow(c.washers.length>1?(e?.attributes?.friendly_name||id):'Lavatrice',
-     !rsKnown(e)?'Stato non disponibile':active?`In funzione${time?' · Tempo: '+time:''}`:'Spenta','mdi:washing-machine'));
+     !rsKnown(e)?'Stato non disponibile':active?`In funzione${time?' · Tempo: '+time:''}`:'Spenta','mdi:washing-machine','','','','','washer'));
  }
  for(const id of c.dryers){
    const e=this._state(id),active=a.dryers.includes(id),time=active?this._timeValue(c.dryer_time_entity):'';
    rows.push(this._detailRow(c.dryers.length>1?(e?.attributes?.friendly_name||id):'Asciugatrice',
-     !rsKnown(e)?'Stato non disponibile':active?`In funzione${time?' · Tempo: '+time:''}`:'Spenta','mdi:tumble-dryer'));
+     !rsKnown(e)?'Stato non disponibile':active?`In funzione${time?' · Tempo: '+time:''}`:'Spenta','mdi:tumble-dryer','','','','','dryer'));
  }
  const energy=this._state(c.energy_entity);
  if(c.energy_entity){
    const amount=rsKnown(energy)&&Number.isFinite(Number(energy.state))?`${new Intl.NumberFormat('it-IT',{maximumFractionDigits:2}).format(Number(energy.state))} ${rsText(energy.attributes?.unit_of_measurement||'',20)}`.trim():'Dato non disponibile';
-   rows.push(this._detailRow('Energia del mese',amount,'mdi:lightning-bolt'));
+   rows.push(this._detailRow('Energia del mese',amount,'mdi:lightning-bolt','','','','','energy'));
  }
  for(const group of a.custom){
    const ci=group.indicator;
-   rows.push(this._detailRow(ci.name,`${group.active.length} di ${ci.entities.length} attivi`,ci.icon));
+   rows.push(this._detailRow(ci.name,rsOfTotal(group.active.length,ci.entities.length),ci.icon,'','','','','custom-'+group.index));
    if(ci.entities.length){
      const list=ci.entities.map(id=>{
        const state=this._state(id),label=state?.attributes?.friendly_name||id;
@@ -387,11 +439,12 @@ class RoomSelectorCard extends HTMLElement {
  }
  const names={'lights-off':'Spegnere tutte le luci accese configurate?','climates-off':'Disattivare il riscaldamento per tutti i termostati attivi configurati?','arm-away':'Vuoi attivare l’allarme fuori casa?','lock-door':'Vuoi bloccare la porta?'};
  root.innerHTML=`<style>${RS_OVERLAY_STYLE}</style><div class="rs-layer" data-backdrop="true"><section class="rs-panel ${palette}" role="dialog" aria-modal="true" aria-label="Dettagli e stato">
-   <div class="rs-dialog-top"><strong>Dettagli e stato</strong><button type="button" class="rs-x" data-close="true" aria-label="Chiudi dettagli" data-focus="true"><ha-icon icon="mdi:close"></ha-icon></button></div>
+   <div class="rs-dialog-top"><strong>Dettagli e stato</strong><button type="button" class="rs-x" data-close="true" aria-label="Chiudi" data-focus="true"><ha-icon icon="mdi:close"></ha-icon></button></div>
    <div class="rs-dialog-body">${this._confirm?`<div class="rs-confirm"><p>${rsEsc(names[this._confirm]||'Confermare?')}</p><div class="rs-confirm-actions"><button data-cancel="true">Annulla</button><button class="primary" data-execute="${this._confirm}" ${this._busy?'disabled':''}>Conferma</button></div></div>`:''}
    ${rows.join('')||'<div class="rs-help">Nessun indicatore configurato.</div>'}
    ${this._error?`<p class="rs-help" role="alert">${rsEsc(this._error)}</p>`:''}${this._feedback?`<p class="rs-help" role="status">${rsEsc(this._feedback)}</p>`:''}</div></section></div>`;
  const body=root.querySelector('.rs-dialog-body');if(body)body.scrollTop=scrollTop;
+ if(this._hit)root.querySelector(`[data-row="${this._hit}"]`)?.classList.add('rs-hit');
  if(focusKey){const next=[...root.querySelectorAll('button')].find(x=>x.getAttribute(focusKey)===focusValue);next?.focus?.({preventScroll:true});}
 }
   _overlayClick(e){
@@ -554,10 +607,10 @@ class RoomSelectorCardEditor extends HTMLElement {
     }
     if(this._tab==='aspetto'){
       const theme=`<select class="rs-e-input" data-field="theme_mode">${[['auto','Auto (Home Assistant)'],['light','Light Edera'],['dark','Dark Edera']].map(([v,label])=>`<option value="${v}" ${c.theme_mode===v?'selected':''}>${label}</option>`).join('')}</select>`;
-      body='<div class="rs-e-heading">Aspetto Edera</div><div class="rs-e-desc">Personalizza intestazione, tema e pulsante dei dettagli, seguendo il design delle altre card.</div>'+
-        `<div class="rs-e-field"><label>Intestazione superiore</label><input class="rs-e-input" type="text" data-field="eyebrow" maxlength="55" value="${rsEsc(c.eyebrow)}"/></div>`+
+      body='<div class="rs-e-heading">Aspetto Edera</div><div class="rs-e-desc">Personalizza nome card, tema e pulsante dei dettagli, seguendo il design delle altre card.</div>'+
+        `<div class="rs-e-field"><label>Nome card (intestazione superiore)</label><input class="rs-e-input" type="text" data-field="eyebrow" maxlength="55" value="${rsEsc(c.eyebrow)}"/></div>`+this._check('show_eyebrow','Mostra nome card')+
         `<div class="rs-e-field"><label>Tema</label>${theme}</div>`+
-        this._check('show_details_button','Mostra “Dettagli e stato”');
+        this._check('show_details_button','Mostra pulsante dettagli (icona “i”)','Le icone di stato aprono comunque i dettagli.');
     }
     if(this._tab==='avanzate'){
       body='<div class="rs-e-heading">Avanzate</div><div class="rs-e-desc">Gli indicatori sono informativi. I controlli di allarme e serratura si aprono con Home Assistant.</div>'+
@@ -628,7 +681,7 @@ class RoomSelectorCardEditor extends HTMLElement {
     if(input.hasAttribute('data-custom-entity-input')){const index=Number(input.dataset.customEntityInput),ci=this._config.custom_indicators[index];
       const id=rsEntity(input.value,RS_DOMAINS.custom_entities);if(ci&&id&&!ci.entities.includes(id))this._changeCustom(index,{entities:[...ci.entities,id]});return;}
     if(!key)return;
-    if(key==='controls_enabled'||key==='show_details_button'){this._update({[key]:input.checked});return;}
+    if(key==='controls_enabled'||key==='show_details_button'||key==='show_eyebrow'){this._update({[key]:input.checked});return;}
     if(key==='theme_mode'){this._update({theme_mode:input.value});return;}
     if(key==='washer_active_state'||key==='dryer_active_state'||key==='eyebrow'){this._update({[key]:input.value});return;}
     if(key==='lights'||key==='climates'||key==='alarms'||key==='washers'||key==='dryers'||key==='cooling_climates'){

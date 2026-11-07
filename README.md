@@ -29,9 +29,11 @@ The selected room can be used by existing Home Assistant automations and dashboa
 
 - **Room selection:** Switch between options provided by an existing `input_select` or `select` entity.
 - **Custom room icons:** Configure Material Design Icons for individual rooms.
-- **Security status:** Always display the configured alarm and door-lock states, including unavailable states.
-- **Conditional indicators:** Show heating, cooling, washing machine, and dryer indicators when active.
-- **Details popup:** View alarm, door-lock, heating, cooling, appliance, and monthly energy information.
+- **Optional card name:** Show or hide the small label above the room name. The room name is always displayed.
+- **Status icon bar:** Alarm and door-lock icons are always displayed, with colors for normal, warning, critical, and unavailable states.
+- **Active devices:** Heating, cooling, washing machine, dryer, and custom indicators appear after a separator when active, with a counter when more than one device is active.
+- **Details popup:** Open it from the optional information button or by tapping any status icon, which jumps directly to the matching item. It shows alarm, door-lock, heating, cooling, appliance, and monthly energy information.
+- **Stable page:** Opening the popup does not move the dashboard behind it.
 - **Duration sensors:** Optionally display available timing information for the away alarm, heating, cooling, washing machine, and dryer.
 - **Security actions:** Optionally run a configured away-alarm script or lock a door through a compatible `lock.*` entity or dedicated script, with confirmation.
 - **Native Home Assistant controls:** Open the entity interface for alarm and door-lock management.
@@ -109,6 +111,8 @@ The card does not provide a direct door-unlock shortcut. Other indicators are in
 
 Security commands are executed through Home Assistant services and depend on the permissions and behavior of the configured entities or scripts.
 
+Unknown or unavailable states are never treated as confirmation that a device is secure. A submitted command does not independently prove that a physical device has completed the operation.
+
 ## Compatibility and Requirements
 
 Room Selector Card requires:
@@ -120,18 +124,6 @@ Room Selector Card requires:
 A specific minimum Home Assistant version has not been independently verified.
 
 The card does not require additional JavaScript libraries, subscriptions, or dedicated external cloud services.
-
-## Privacy and Security
-
-Room Selector Card uses the entities, services, and permissions already available in Home Assistant.
-
-The card does not implement advertising, telemetry, analytics, or external tracking services.
-
-Unknown or unavailable device states are not treated as confirmation that a device is secure.
-
-Optional alarm and lock actions require confirmation before a service call is sent. A successfully submitted command does not independently prove that a physical device has completed the requested operation.
-
-Scripts and device integrations may perform additional operations according to their own configurations. Review those operations before enabling security shortcuts.
 
 ## Releases
 
